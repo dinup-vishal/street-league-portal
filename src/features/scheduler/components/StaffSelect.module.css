@@ -1,0 +1,246 @@
+/* StaffSelect Component Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--color-bg-default, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--color-slate-900, #0f172a);
+  font-size: var(--font-size-sm, 14px);
+}
+
+.required {
+  color: var(--color-error, #ef4444);
+  margin-left: 0.25rem;
+  font-weight: 700;
+}
+
+/* Search Input */
+.searchInput {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: var(--font-size-sm, 14px);
+  border: 2px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  font-family: inherit;
+  transition: border-color var(--transition-base, 250ms) ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.searchInput::placeholder {
+  color: var(--color-slate-400, #94a3b8);
+}
+
+/* Role Filters */
+.roleFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.roleLabel {
+  font-weight: 500;
+  color: var(--color-slate-700, #334155);
+  font-size: var(--font-size-sm, 14px);
+}
+
+.roleCheckboxes {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.roleCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: var(--font-size-sm, 14px);
+  user-select: none;
+}
+
+.roleCheckbox input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary, #2563eb);
+}
+
+.roleCheckbox input[type='checkbox']:focus {
+  outline: 2px solid var(--color-focus, #22d3ee);
+  outline-offset: 2px;
+}
+
+/* List Wrapper */
+.listWrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--color-bg-default, #ffffff);
+}
+
+.staffList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.staffItem {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-slate-100, #f1f5f9);
+  display: flex;
+  align-items: center;
+  transition: background-color var(--transition-base, 250ms) ease;
+}
+
+.staffItem:last-child {
+  border-bottom: none;
+}
+
+.staffItem:hover {
+  background-color: var(--color-slate-50, #f8fafc);
+}
+
+.staffItem.selected {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.staffItem.focused {
+  background-color: var(--color-slate-100, #f1f5f9);
+  outline: 2px solid var(--color-primary, #2563eb);
+  outline-offset: -2px;
+}
+
+.itemLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.itemCheckbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--color-primary, #2563eb);
+}
+
+.itemCheckbox:focus {
+  outline: 2px solid var(--color-focus, #22d3ee);
+  outline-offset: 2px;
+}
+
+.itemName {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-slate-900, #0f172a);
+  font-size: var(--font-size-sm, 14px);
+}
+
+.itemRole {
+  padding: 2px 8px;
+  background-color: var(--color-slate-100, #f1f5f9);
+  color: var(--color-slate-700, #334155);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.itemAvail {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.itemAvail.avail-Available {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.itemAvail.avail-Limited {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.itemAvail.avail-Conflict {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.emptyMessage {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-slate-500, #64748b);
+  font-style: italic;
+  font-size: var(--font-size-sm, 14px);
+}
+
+/* Helper Text */
+.helperText {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-slate-600, #475569);
+  margin: 0;
+}
+
+/* Selected Count */
+.selectedCount {
+  padding: 0.75rem;
+  background-color: rgba(37, 99, 235, 0.05);
+  border-left: 3px solid var(--color-primary, #2563eb);
+  color: var(--color-primary, #2563eb);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: 600;
+  border-radius: var(--radius-sm, 4px);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  .roleCheckboxes {
+    gap: 1rem;
+  }
+
+  .itemName,
+  .itemRole,
+  .itemAvail {
+    font-size: 12px;
+  }
+
+  .listWrapper {
+    max-height: 250px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .searchInput,
+  .staffItem,
+  .roleCheckbox {
+    transition: none;
+  }
+}

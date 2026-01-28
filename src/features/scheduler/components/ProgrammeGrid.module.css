@@ -1,0 +1,173 @@
+/* ProgrammeGrid Component Styles */
+
+.gridWrapper {
+  position: relative;
+  width: 100%;
+  background-color: var(--color-bg-default, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+.gridContainer {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+  font-size: var(--font-size-sm, 14px);
+}
+
+/* Header Row */
+.grid thead {
+  background-color: var(--color-slate-50, #f8fafc);
+  border-bottom: 2px solid var(--color-slate-200, #e2e8f0);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.weekHeaderCell,
+.dayHeaderCell {
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-slate-900, #0f172a);
+  border-right: 1px solid var(--color-slate-200, #e2e8f0);
+  min-width: 100px;
+}
+
+.dayHeaderCell {
+  min-width: 80px;
+  text-align: left;
+}
+
+.weekHeaderCell:last-child {
+  border-right: none;
+}
+
+/* Day Rows */
+.dayRow {
+  border-bottom: 1px solid var(--color-slate-200, #e2e8f0);
+  transition: background-color var(--transition-base, 250ms) ease;
+}
+
+.dayRow:hover {
+  background-color: var(--color-slate-50, #f8fafc);
+}
+
+.dayRow:last-child {
+  border-bottom: none;
+}
+
+/* Row Header (Day Label) */
+.dayLabelCell {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-primary, #2563eb);
+  background-color: var(--color-slate-100, #f1f5f9);
+  border-right: 2px solid var(--color-slate-200, #e2e8f0);
+  min-width: 80px;
+  position: sticky;
+  left: 0;
+  z-index: 4;
+}
+
+/* Content Cells */
+.contentCell {
+  padding: 0.5rem;
+  border-right: 1px solid var(--color-slate-200, #e2e8f0);
+  min-width: 100px;
+  vertical-align: middle;
+}
+
+.contentCell:last-child {
+  border-right: none;
+}
+
+/* Mobile Scroll Hint */
+.scrollHint {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 500;
+  pointer-events: none;
+  animation: fadeInOut 3s ease-in-out;
+  z-index: 1;
+}
+
+@keyframes fadeInOut {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .weekHeaderCell,
+  .contentCell {
+    min-width: 90px;
+    padding: 0.5rem;
+  }
+
+  .weekHeaderCell {
+    font-size: var(--font-size-xs, 12px);
+  }
+}
+
+@media (max-width: 640px) {
+  .weekHeaderCell,
+  .contentCell,
+  .dayLabelCell,
+  .dayHeaderCell {
+    padding: 0.375rem;
+    min-width: 70px;
+    font-size: 10px;
+  }
+
+  .grid {
+    font-size: 10px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .dayRow {
+    transition: none;
+  }
+
+  .scrollHint {
+    animation: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .scrollHint {
+    display: none;
+  }
+
+  .gridContainer {
+    overflow: visible;
+  }
+
+  .dayLabelCell {
+    position: static;
+  }
+}

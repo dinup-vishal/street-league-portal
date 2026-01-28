@@ -9,12 +9,12 @@ import type { User, UserProfile } from '../types/auth';
 const MOCK_USERS: Record<string, { username: string; password: string; profile: UserProfile }> = {
   'scheduler_user': {
     username: 'scheduler_user',
-    password: 'password123',
+    password: 'password1',
     profile: 'Scheduler',
   },
   'leadership_user': {
     username: 'leadership_user',
-    password: 'password123',
+    password: 'password1',
     profile: 'Leadership',
   },
   'demo': {
@@ -92,9 +92,10 @@ export const getProfileRoute = (profile: UserProfile): string => {
   }
 };
 
+
 /**
  * Mock credentials for testing
- * scheduler_user / password123 (Scheduler profile)
- * leadership_user / password123 (Leadership profile)
+ * scheduler_user / password1 (Scheduler profile)
+ * leadership_user / password1 (Leadership profile)
  * demo / demo (Scheduler profile)
  */

@@ -32,8 +32,8 @@
   z-index: 5;
 }
 
-.weekHeaderCell,
-.dayHeaderCell {
+.dayHeaderCell,
+.weekHeaderCell {
   padding: 0.75rem;
   text-align: center;
   font-weight: 700;
@@ -42,33 +42,33 @@
   min-width: 100px;
 }
 
-.dayHeaderCell {
+.weekHeaderCell {
   min-width: 80px;
-  text-align: left;
+  text-align: center;
 }
 
-.weekHeaderCell:last-child {
+.dayHeaderCell:last-child {
   border-right: none;
 }
 
-/* Day Rows */
-.dayRow {
+/* Week Rows */
+.weekRow {
   border-bottom: 1px solid var(--color-slate-200, #e2e8f0);
   transition: background-color var(--transition-base, 250ms) ease;
 }
 
-.dayRow:hover {
+.weekRow:hover {
   background-color: var(--color-slate-50, #f8fafc);
 }
 
-.dayRow:last-child {
+.weekRow:last-child {
   border-bottom: none;
 }
 
-/* Row Header (Day Label) */
-.dayLabelCell {
+/* Row Header (Week Label) */
+.weekLabelCell {
   padding: 0.75rem;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   color: var(--color-primary, #2563eb);
   background-color: var(--color-slate-100, #f1f5f9);
@@ -120,22 +120,22 @@
 
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
-  .weekHeaderCell,
+  .dayHeaderCell,
   .contentCell {
     min-width: 90px;
     padding: 0.5rem;
   }
 
-  .weekHeaderCell {
+  .dayHeaderCell {
     font-size: var(--font-size-xs, 12px);
   }
 }
 
 @media (max-width: 640px) {
-  .weekHeaderCell,
+  .dayHeaderCell,
   .contentCell,
-  .dayLabelCell,
-  .dayHeaderCell {
+  .weekLabelCell,
+  .weekHeaderCell {
     padding: 0.375rem;
     min-width: 70px;
     font-size: 10px;

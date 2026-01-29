@@ -1,6 +1,6 @@
 /**
  * ProgrammeGrid Component
- * Displays a 4×10 (days × weeks) read-only schedule grid
+ * Displays a 10×4 (weeks × days) read-only schedule grid
  */
 
 import React, { useState } from 'react';
@@ -24,34 +24,34 @@ export const ProgrammeGrid: React.FC<ProgrammeGridProps> = ({ programme }) => {
     <div className={styles.gridWrapper}>
       <div className={styles.gridContainer} onScroll={handleScroll}>
         <table className={styles.grid} role="table" aria-label="10-week programme schedule">
-          {/* Header: Week numbers */}
+          {/* Header: Day names */}
           <thead>
             <tr>
-              <th className={styles.dayHeaderCell} scope="col">
+              <th className={styles.weekHeaderCell} scope="col">
                 Week
               </th>
-              {programme.map((week: ProgrammeWeek) => (
-                <th key={`week-${week.week}`} className={styles.weekHeaderCell} scope="col">
-                  Week {week.week}
+              {WEEKDAYS.map((day) => (
+                <th key={`day-${day}`} className={styles.dayHeaderCell} scope="col">
+                  {day}
                 </th>
               ))}
             </tr>
           </thead>
 
-          {/* Body: 4 rows (one per day) */}
+          {/* Body: 10 rows (one per week) */}
           <tbody>
-            {WEEKDAYS.map((dayName) => (
-              <tr key={dayName} className={styles.dayRow}>
-                {/* Sticky day label */}
-                <th className={styles.dayLabelCell} scope="row">
-                  {dayName}
+            {programme.map((week: ProgrammeWeek) => (
+              <tr key={`week-${week.week}`} className={styles.weekRow}>
+                {/* Sticky week label */}
+                <th className={styles.weekLabelCell} scope="row">
+                  Week {week.week}
                 </th>
 
-                {/* One cell per week */}
-                {programme.map((week: ProgrammeWeek) => {
+                {/* One cell per day */}
+                {WEEKDAYS.map((dayName: Weekday) => {
                   const dayPlan = week.days.find((d: DayPlanType) => d.day === dayName);
                   return (
-                    <td key={`${dayName}-week-${week.week}`} className={styles.contentCell}>
+                    <td key={`week-${week.week}-${dayName}`} className={styles.contentCell}>
                       {dayPlan && <DayCell dayPlan={dayPlan} />}
                     </td>
                   );
@@ -65,7 +65,7 @@ export const ProgrammeGrid: React.FC<ProgrammeGridProps> = ({ programme }) => {
       {/* Mobile hint */}
       {scrollPosition < 100 && (
         <div className={styles.scrollHint} aria-live="polite">
-          ← Scroll to view more weeks →
+          ← Scroll to view more →
         </div>
       )}
     </div>

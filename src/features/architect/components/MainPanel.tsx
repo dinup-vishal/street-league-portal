@@ -7,6 +7,7 @@
 import React from 'react';
 import type { Step } from '../types';
 import { PlaceholderForm } from './PlaceholderForm';
+import { LessonPlansForm } from './forms';
 import styles from './MainPanel.module.css';
 
 interface MainPanelProps {
@@ -34,7 +35,11 @@ export const MainPanel: React.FC<MainPanelProps> = ({ step }) => {
           </header>
 
           <section className={styles.formSection}>
-            <PlaceholderForm title={step.name} />
+            {step.id === 'step-2-4' ? (
+              <LessonPlansForm />
+            ) : (
+              <PlaceholderForm title={step.name} />
+            )}
           </section>
         </div>
       )}

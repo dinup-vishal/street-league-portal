@@ -17,6 +17,11 @@ const MOCK_USERS: Record<string, { username: string; password: string; profile: 
     password: 'password1',
     profile: 'Leadership',
   },
+  'architect_user': {
+    username: 'architect_user',
+    password: 'password1',
+    profile: 'Architect',
+  },
   'demo': {
     username: 'demo',
     password: 'demo',
@@ -87,6 +92,8 @@ export const getProfileRoute = (profile: UserProfile): string => {
       return '/scheduler';
     case 'Leadership':
       return '/leadership';
+    case 'Architect':
+      return '/architect';
     default:
       return '/';
   }
@@ -97,5 +104,6 @@ export const getProfileRoute = (profile: UserProfile): string => {
  * Mock credentials for testing
  * scheduler_user / password1 (Scheduler profile)
  * leadership_user / password1 (Leadership profile)
+ * architect_user / password1 (Architect profile)
  * demo / demo (Scheduler profile)
  */

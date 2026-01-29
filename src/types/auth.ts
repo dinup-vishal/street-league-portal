@@ -2,7 +2,7 @@
  * Authentication Types
  */
 
-export type UserProfile = 'Scheduler' | 'Leadership';
+export type UserProfile = 'Scheduler' | 'Leadership' | 'Architect';
 
 export interface User {
   id: string;

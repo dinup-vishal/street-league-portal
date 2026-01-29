@@ -7,7 +7,7 @@ import { Home, Dashboard, Settings, About } from './pages';
 import LoginPage from './pages/Login/LoginPage';
 import SchedulerPage from './pages/ProfileHome/SchedulerPage';
 import LeadershipPage from './pages/ProfileHome/LeadershipPage';
-import { AuthProvider, Login, Home as AuthHome, ProtectedRoute } from './features/auth';
+import { AuthProvider } from './features/auth';
 import { AppShell as ArchitectPortal } from './features/architect';
 
 const LayoutWithOutlet = () => (
@@ -25,26 +25,24 @@ function App() {
         <CssBaseline />
         <Router>
           <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/home" element={<ProtectedRoute><AuthHome /></ProtectedRoute>} />
+            {/* Auth Routes - Only login-legacy */}
+            <Route path="/login-legacy" element={<LoginPage />} />
             
             {/* Architect Portal */}
             <Route 
               path="/architect" 
               element={
-                <ProtectedRoute requiredRoles={['admin', 'program_manager']}>
-                  <div style={{ height: '100vh' }}>
-                    <ArchitectPortal />
-                  </div>
-                </ProtectedRoute>
+                <div style={{ height: '100vh' }}>
+                  <ArchitectPortal />
+                </div>
               } 
             />
 
-            {/* Existing Routes */}
-            <Route path="/login-legacy" element={<LoginPage />} />
+            {/* Profile Home Pages */}
             <Route path="/scheduler" element={<SchedulerPage />} />
             <Route path="/leadership" element={<LeadershipPage />} />
+
+            {/* Existing Routes */}
             <Route element={<LayoutWithOutlet />}>
               <Route path="/" element={<Home />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -52,8 +50,8 @@ function App() {
               <Route path="/about" element={<About />} />
             </Route>
             
-            {/* Redirect */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Redirect to login-legacy */}
+            <Route path="*" element={<Navigate to="/login-legacy" replace />} />
           </Routes>
         </Router>
       </ThemeProvider>

@@ -7,6 +7,9 @@ export interface Lesson {
   title: string;
   code: string;
   productId: string;
+  academyId?: string; // Optional - can be added later
   duration: number; // in minutes
+  description?: string;
+  learningObjectives?: string[];
   createdAt: string;
 }

@@ -2,6 +2,7 @@
  * LessonPlansForm.tsx
  * Lesson Plans form for Architect Portal
  * Allows mapping lessons to cohorts through product and academy selection
+ * Uses unified lessons from both mock data and user-created lessons
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,11 +18,11 @@ import {
   MOCK_COHORTS,
   MOCK_LESSONS,
   getAcademiesByProduct,
-  getLessonsByProductAndAcademy,
   saveLessonPlansMappings,
   loadLessonPlansMappings,
   getMappingsByProductAndAcademy,
 } from '../../data/lessonPlansMock';
+import { loadLessons, getLessonsByProductAndAcademy } from '../../data/lessonMock';
 
 export const LessonPlansForm: React.FC = () => {
   const [formState, setFormState] = useState<LessonPlansFormState>({
@@ -32,9 +33,11 @@ export const LessonPlansForm: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Load mappings on mount
+  // Load mappings and user lessons on mount
   useEffect(() => {
     const loadedMappings = loadLessonPlansMappings();
+    loadLessons(); // Load lessons to ensure they're available for filtering
+    
     setFormState((prev) => ({
       ...prev,
       mappings: loadedMappings,

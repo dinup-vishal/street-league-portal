@@ -1,11 +1,29 @@
 /**
  * Mock data for Lesson Management
+ * Unified lesson management combining Manage and Mapping tabs
  */
 
 import type { Lesson } from '../types/lesson';
-import { MOCK_PRODUCTS } from './lessonPlansMock';
+import { MOCK_PRODUCTS, MOCK_LESSONS as MOCK_LESSONS_PLANS } from './lessonPlansMock';
 
 export { MOCK_PRODUCTS };
+
+/**
+ * Convert mock lesson plans to lesson format
+ */
+function convertMockLessonsFromPlans(): Lesson[] {
+  return MOCK_LESSONS_PLANS.map((lessonPlan) => ({
+    id: lessonPlan.id,
+    title: lessonPlan.title,
+    code: `${lessonPlan.id.split('-').slice(0, 2).join('-')}`, // Generate code from ID
+    productId: lessonPlan.productId,
+    academyId: lessonPlan.academyId,
+    duration: lessonPlan.duration || 60, // Default to 60 minutes if not specified
+    description: lessonPlan.description,
+    learningObjectives: lessonPlan.learningObjectives,
+    createdAt: new Date().toISOString(),
+  }));
+}
 
 /**
  * Storage key for lessons
@@ -25,15 +43,40 @@ export function saveLessons(lessons: Lesson[]): void {
 
 /**
  * Load lessons from localStorage
+ * Includes both mock lessons and user-created lessons
  */
 export function loadLessons(): Lesson[] {
   try {
-    const data = localStorage.getItem(LESSONS_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const userLessons = localStorage.getItem(LESSONS_STORAGE_KEY);
+    const mockLessons = convertMockLessonsFromPlans();
+    const parsedUserLessons = userLessons ? JSON.parse(userLessons) : [];
+    
+    // Combine mock and user-created lessons, avoiding duplicates
+    const mockIds = new Set(mockLessons.map((l) => l.id));
+    const combinedLessons = [
+      ...mockLessons,
+      ...parsedUserLessons.filter((l: Lesson) => !mockIds.has(l.id)),
+    ];
+    
+    return combinedLessons;
   } catch (error) {
     console.error('Failed to load lessons:', error);
-    return [];
+    return convertMockLessonsFromPlans();
   }
+}
+
+/**
+ * Get lessons for a specific product and academy
+ * Combines mock lessons and user-created lessons
+ */
+export function getLessonsByProductAndAcademy(
+  productId: string,
+  academyId: string
+): Lesson[] {
+  const allLessons = loadLessons();
+  return allLessons.filter(
+    (lesson) => lesson.productId === productId && lesson.academyId === academyId
+  );
 }
 
 /**

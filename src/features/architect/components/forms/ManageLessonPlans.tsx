@@ -92,10 +92,13 @@ export const ManageLessonPlans: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
 
-    // Add to lessons and save
+    // Add to lessons in memory
     const updatedLessons = [...lessons, newLesson];
     setLessons(updatedLessons);
-    saveLessons(updatedLessons);
+    
+    // Save only user-created lessons (filter to exclude mock lessons)
+    const userCreatedLessons = updatedLessons.filter((l) => l.id.startsWith('lesson-'));
+    saveLessons(userCreatedLessons);
 
     // Reset form
     setFormData({
@@ -122,8 +125,12 @@ export const ManageLessonPlans: React.FC = () => {
   const handleDeleteLesson = (lessonId: string) => {
     const lessonToDelete = lessons.find((l) => l.id === lessonId);
     const updatedLessons = lessons.filter((l) => l.id !== lessonId);
+    
+    // Only save user-created lessons (those starting with 'lesson-' created from Date.now())
+    const userCreatedLessons = updatedLessons.filter((l) => l.id.startsWith('lesson-'));
+    saveLessons(userCreatedLessons);
+    
     setLessons(updatedLessons);
-    saveLessons(updatedLessons);
     setSuccessMessage(`Lesson "${lessonToDelete?.title}" deleted successfully`);
   };
 
@@ -262,39 +269,44 @@ export const ManageLessonPlans: React.FC = () => {
               </div>
 
               {/* Grid Rows */}
-              {lessons.map((lesson) => (
-                <div key={lesson.id} className={styles.gridRow}>
-                  <div className={styles.gridCell}>
-                    <span className={styles.lessonId}>{lesson.id}</span>
+              {lessons.map((lesson) => {
+                const isMockLesson = !lesson.id.startsWith('lesson-');
+                return (
+                  <div key={lesson.id} className={styles.gridRow}>
+                    <div className={styles.gridCell}>
+                      <span className={styles.lessonId}>{lesson.id}</span>
+                      {isMockLesson && <span className={styles.mockBadge}>Mock</span>}
+                    </div>
+                    <div className={styles.gridCell}>
+                      <span className={styles.cellContent}>{lesson.title}</span>
+                    </div>
+                    <div className={styles.gridCell}>
+                      <span className={styles.cellContent}>{lesson.code}</span>
+                    </div>
+                    <div className={styles.gridCell}>
+                      <span className={styles.productBadge}>{getProductName(lesson.productId)}</span>
+                    </div>
+                    <div className={styles.gridCell}>
+                      <span className={styles.cellContent}>{lesson.duration} min</span>
+                    </div>
+                    <div className={styles.gridCell}>
+                      <span className={styles.dateText}>
+                        {new Date(lesson.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className={styles.gridCell}>
+                      <button
+                        onClick={() => handleDeleteLesson(lesson.id)}
+                        className={styles.deleteButton}
+                        disabled={isMockLesson}
+                        title={isMockLesson ? 'Cannot delete mock lessons' : 'Delete this lesson'}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.gridCell}>
-                    <span className={styles.cellContent}>{lesson.title}</span>
-                  </div>
-                  <div className={styles.gridCell}>
-                    <span className={styles.cellContent}>{lesson.code}</span>
-                  </div>
-                  <div className={styles.gridCell}>
-                    <span className={styles.productBadge}>{getProductName(lesson.productId)}</span>
-                  </div>
-                  <div className={styles.gridCell}>
-                    <span className={styles.cellContent}>{lesson.duration} min</span>
-                  </div>
-                  <div className={styles.gridCell}>
-                    <span className={styles.dateText}>
-                      {new Date(lesson.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className={styles.gridCell}>
-                    <button
-                      onClick={() => handleDeleteLesson(lesson.id)}
-                      className={styles.deleteButton}
-                      title="Delete this lesson"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

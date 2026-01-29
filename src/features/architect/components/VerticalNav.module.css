@@ -1,0 +1,77 @@
+/**
+ * VerticalNav.module.css
+ * Styling for the vertical navigation sidebar
+ */
+
+.navContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  overflow-y: auto;
+}
+
+.navHeader {
+  padding: 1.5rem 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.navTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  padding: 0;
+  letter-spacing: -0.015em;
+}
+
+.phaseList {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.phaseList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.phaseList::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.phaseList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.phaseList::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navContainer {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .navHeader {
+    padding: 1rem 0.75rem;
+  }
+
+  .navTitle {
+    font-size: 1rem;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .phaseList {
+    scroll-behavior: auto;
+  }
+}

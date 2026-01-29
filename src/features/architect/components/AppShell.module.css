@@ -1,0 +1,160 @@
+/**
+ * AppShell.module.css
+ * Styling for the main application shell
+ * Two-column responsive layout
+ */
+
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* Skip link for accessibility */
+.skipLink {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  z-index: 100;
+  font-weight: 500;
+}
+
+.skipLink:focus {
+  top: 0;
+  outline: 3px solid #22d3ee;
+}
+
+/* App header */
+.appHeader {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-bottom: 3px solid #1e40af;
+  flex-shrink: 0;
+}
+
+.appTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  letter-spacing: -0.02em;
+}
+
+.appSubtitle {
+  font-size: 0.9375rem;
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+  opacity: 0.95;
+  line-height: 1.4;
+}
+
+/* Main layout container */
+.layoutContainer {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.layoutContainer > * {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Left sidebar (navigation) */
+.layoutContainer > :first-child {
+  flex: 0 0 300px;
+  max-width: 320px;
+}
+
+/* Right panel (main content) */
+.layoutContainer > :last-child {
+  flex: 1;
+}
+
+/* Responsive: Stack on mobile */
+@media (max-width: 768px) {
+  .appContainer {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .appHeader {
+    padding: 1rem;
+  }
+
+  .appTitle {
+    font-size: 1.25rem;
+  }
+
+  .appSubtitle {
+    font-size: 0.875rem;
+  }
+
+  .layoutContainer {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .layoutContainer > * {
+    flex: none;
+    overflow: visible;
+  }
+
+  .layoutContainer > :first-child {
+    flex: none;
+    max-width: 100%;
+    max-height: 50vh;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-y: auto;
+  }
+
+  .layoutContainer > :last-child {
+    flex: 1;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .appHeader {
+    padding: 0.75rem;
+  }
+
+  .appTitle {
+    font-size: 1.1rem;
+  }
+
+  .appSubtitle {
+    display: none;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .appContainer {
+    scroll-behavior: auto;
+  }
+}
+
+/* Print styles */
+@media print {
+  .skipLink,
+  .appHeader {
+    display: none;
+  }
+
+  .layoutContainer {
+    flex-direction: column;
+  }
+
+  .layoutContainer > :first-child {
+    max-width: none;
+  }
+}

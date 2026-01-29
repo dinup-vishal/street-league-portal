@@ -1,0 +1,246 @@
+/* StaffListPanel Component Styles */
+
+.panelContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-bg-default, #ffffff);
+  border: 1px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+}
+
+/* Panel Header */
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 2px solid var(--color-slate-200, #e2e8f0);
+  background-color: var(--color-slate-50, #f8fafc);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: var(--font-size-lg, 18px);
+  font-weight: 700;
+  color: var(--color-slate-900, #0f172a);
+}
+
+.staffCount {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--color-primary, #2563eb);
+  color: white;
+  border-radius: 20px;
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 700;
+}
+
+/* Panel Content */
+.panelContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.roleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.roleTitle {
+  margin: 0;
+  padding: 0 0 0.5rem 0;
+  font-size: var(--font-size-sm, 14px);
+  font-weight: 700;
+  color: var(--color-slate-700, #334155);
+  border-bottom: 2px solid var(--color-slate-200, #e2e8f0);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Staff Grid */
+.staffGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Staff Card */
+.staffCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--color-slate-50, #f8fafc);
+  border: 2px solid var(--color-slate-200, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  cursor: grab;
+  transition: all var(--transition-base, 250ms) ease;
+  user-select: none;
+  text-align: center;
+}
+
+.staffCard:hover {
+  background-color: var(--color-bg-default, #ffffff);
+  border-color: var(--color-primary, #2563eb);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+}
+
+.staffCard:focus {
+  outline: 3px solid var(--color-focus, #22d3ee);
+  outline-offset: 2px;
+}
+
+.staffCard:active {
+  cursor: grabbing;
+}
+
+.staffCard.selected {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-color: var(--color-primary, #2563eb);
+}
+
+.cardName {
+  font-weight: 700;
+  color: var(--color-slate-900, #0f172a);
+  font-size: var(--font-size-sm, 14px);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.cardRole {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-slate-600, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.cardAvail {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardAvail.avail-Available {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.cardAvail.avail-Limited {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.cardAvail.avail-Conflict {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Empty State */
+.emptyState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-slate-500, #64748b);
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: var(--font-size-sm, 14px);
+  font-style: italic;
+}
+
+/* Panel Footer */
+.panelFooter {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-slate-50, #f8fafc);
+  border-top: 1px solid var(--color-slate-200, #e2e8f0);
+  text-align: center;
+}
+
+.dragHint {
+  margin: 0;
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-slate-600, #475569);
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .staffGrid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+
+  .cardName {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .panelContainer {
+    border-radius: var(--radius-sm, 4px);
+  }
+
+  .panelHeader {
+    padding: 0.75rem;
+  }
+
+  .panelTitle {
+    font-size: var(--font-size-base, 16px);
+  }
+
+  .panelContent {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .staffGrid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .staffCard {
+    padding: 0.5rem;
+  }
+
+  .cardName {
+    font-size: 11px;
+  }
+
+  .cardRole {
+    font-size: 9px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .staffCard {
+    transition: none;
+  }
+
+  .staffCard:hover {
+    transform: none;
+  }
+}
+
+/* Drag Over State */
+.staffCard[draggable='true']::-webkit-drag-target {
+  opacity: 0.7;
+}

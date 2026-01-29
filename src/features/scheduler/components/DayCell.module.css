@@ -3,28 +3,24 @@
 .cellContainer {
   position: relative;
   width: 100%;
-  min-height: 60px;
+  min-height: auto;
 }
 
 .cellContent {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
   background-color: var(--color-bg-default, #ffffff);
   border: 1px solid var(--color-slate-200, #e2e8f0);
   border-radius: var(--radius-sm, 4px);
-  cursor: pointer;
-  transition: background-color var(--transition-base, 250ms) ease,
-    border-color var(--transition-base, 250ms) ease;
+  transition: border-color var(--transition-base, 250ms) ease;
   font-size: var(--font-size-xs, 12px);
   line-height: 1.4;
   overflow: hidden;
 }
 
 .cellContent:hover {
-  background-color: var(--color-slate-50, #f8fafc);
   border-color: var(--color-primary, #2563eb);
 }
 
@@ -33,61 +29,7 @@
   outline-offset: 2px;
 }
 
-.compactText {
-  flex: 1;
-  word-break: break-word;
-  color: var(--color-slate-700, #334155);
-}
-
-.expandBtn {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-primary, #2563eb);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform var(--transition-base, 250ms) ease;
-}
-
-.expandBtn:focus {
-  outline: 2px solid var(--color-focus, #22d3ee);
-  outline-offset: 1px;
-  border-radius: 2px;
-}
-
-.expandBtn:hover {
-  transform: scale(1.1);
-}
-
-/* Expanded Overlay */
-.expandedOverlay {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  background-color: var(--color-bg-default, #ffffff);
-  border: 2px solid var(--color-primary, #2563eb);
-  border-radius: var(--radius-sm, 4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-top: 4px;
-}
-
-.expandedContent {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0.75rem;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
+/* Segment Row - displayed inline */
 .segmentRow {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -96,6 +38,19 @@
   border-bottom: 1px solid var(--color-slate-100, #f1f5f9);
   align-items: center;
   font-size: var(--font-size-xs, 12px);
+  cursor: pointer;
+  transition: background-color var(--transition-base, 250ms) ease;
+  user-select: none;
+}
+
+.segmentRow:hover {
+  background-color: var(--color-slate-50, #f8fafc);
+}
+
+.segmentRow:focus {
+  outline: 2px solid var(--color-primary, #2563eb);
+  outline-offset: -2px;
+  background-color: rgba(37, 99, 235, 0.05);
 }
 
 .segmentRow:last-child {
@@ -113,7 +68,8 @@
 .segmentDuration {
   color: var(--color-slate-600, #475569);
   text-align: right;
-  min-width: 40px;
+  min-width: 35px;
+  font-weight: 500;
 }
 
 .segmentCategory {

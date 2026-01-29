@@ -1,12 +1,13 @@
 /**
  * SchedulerModal Component
  * Main modal for scheduling a 10-week cohort programme
+ * Features side-by-side programme grid and staff list with drag-and-drop
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { Cohort, SchedulePayload, Programme } from '../types';
 import { ProgrammeGrid } from './ProgrammeGrid';
-import { StaffSelect } from './StaffSelect';
+import { StaffListPanel } from './StaffListPanel';
 import { buildMockProgramme } from '../mock/mockProgramme';
 import { mockStaff } from '../mock/mockStaff';
 import { ensureMonday, generateDateMapping, toISO } from '../utils/dateMap';
@@ -19,7 +20,6 @@ interface SchedulerModalProps {
 
 export const SchedulerModal: React.FC<SchedulerModalProps> = ({ cohort, onClose }) => {
   const [startDate, setStartDate] = useState<string>('');
-  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mondayWarning, setMondayWarning] = useState(false);
@@ -74,9 +74,8 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({ cohort, onClose 
       newErrors.push('Start date is required.');
     }
 
-    if (selectedStaff.length === 0) {
-      newErrors.push('Please select at least one staff member.');
-    }
+    // TODO: Validate staff assignments from drag-and-drop
+    // For now, we'll allow saving with just a date
 
     if (newErrors.length > 0) {
       setErrors(newErrors);
@@ -95,13 +94,13 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({ cohort, onClose 
       const payload: SchedulePayload = {
         cohortId: cohort.cohortId,
         startDateISO: adjustedStart,
-        staffIds: selectedStaff,
+        staffIds: [], // TODO: Collect from drag-and-drop assignments
         dateMapping: mapping,
       };
 
       console.log('Schedule Saved:', payload);
       alert(
-        `Schedule created successfully!\n\nCohort: ${cohort.cohortCode}\nStart: ${adjustedStart}\nStaff: ${selectedStaff.length}`
+        `Schedule created successfully!\n\nCohort: ${cohort.cohortCode}\nStart: ${adjustedStart}`
       );
 
       setIsSubmitting(false);
@@ -142,9 +141,9 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({ cohort, onClose 
 
         {/* Content */}
         <div className={styles.content}>
-          {/* Section 1: Start Date */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Step 1: Select Start Date</h2>
+          {/* Start Date Section - Full width */}
+          <section className={styles.dateSection}>
+            <h2 className={styles.sectionTitle}>Select Start Date</h2>
             <label htmlFor="start-date" className={styles.label}>
               Programme Start Date <span className={styles.required}>*</span>
             </label>
@@ -172,26 +171,20 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({ cohort, onClose 
             )}
           </section>
 
-          {/* Section 2: Programme Grid */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Step 2: Review 10-Week Programme</h2>
-            <p className={styles.sectionDesc}>
-              The schedule below shows all workshops and activities for each day. You cannot modify individual sessions
-              in this release.
-            </p>
-            <ProgrammeGrid programme={programme} />
-          </section>
+          {/* Two-Column Layout: Programme Grid + Staff List */}
+          <div className={styles.twoColumnLayout}>
+            {/* Left: Programme Grid */}
+            <section className={styles.gridSection}>
+              <h2 className={styles.sectionTitle}>10-Week Programme</h2>
+              <p className={styles.sectionDesc}>Drag staff from right panel to assign workshops</p>
+              <ProgrammeGrid programme={programme} />
+            </section>
 
-          {/* Section 3: Staff Selection */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Step 3: Assign Staff</h2>
-            <p className={styles.sectionDesc}>
-              Select which team members will deliver this cohort. All selected staff will be assigned to the entire
-              10-week programme.
-            </p>
-            <StaffSelect staff={mockStaff} selected={selectedStaff} onChange={setSelectedStaff} />
-            {/* TODO: Per-day staff assignment (future scope) */}
-          </section>
+            {/* Right: Staff Panel */}
+            <section className={styles.staffSection}>
+              <StaffListPanel staff={mockStaff} startDate={startDate} />
+            </section>
+          </div>
 
           {/* Errors */}
           {errors.length > 0 && (

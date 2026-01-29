@@ -206,6 +206,31 @@
   transition: all 0.2s ease;
 }
 
+.autoAssignButton {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #ff9800;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.autoAssignButton:hover:not(:disabled) {
+  background: #f57c00;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+}
+
+.autoAssignButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .saveButton {
   background: #28a745;
   color: #ffffff;
@@ -304,6 +329,18 @@
   background: #007bff;
   color: #ffffff;
   border-color: #007bff;
+}
+
+.weekButton.complete {
+  background: #28a745;
+  color: #ffffff;
+  border-color: #28a745;
+  font-weight: 700;
+}
+
+.weekButton.complete:hover {
+  background: #218838;
+  border-color: #218838;
 }
 
 /* Week Content */

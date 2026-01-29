@@ -35,6 +35,23 @@
   font-weight: 600;
 }
 
+/* Empty State */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #999;
+  font-style: italic;
+  min-height: 200px;
+}
+
+.emptyState p {
+  margin: 0;
+}
+
 /* Role Section */
 .roleSection {
   margin-bottom: 1.5rem;

@@ -1,6 +1,7 @@
 /**
  * Mock Staff Data
  * Team members with availability across Mon-Thu delivery
+ * availabilityPeriod indicates when staff are available for the programme
  */
 
 import type { Staff } from '../types';
@@ -16,6 +17,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-02', // Available from early Feb (week 1)
+    },
     hubs: ['North Academy', 'Central Hub'],
   },
   {
@@ -28,6 +32,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-02', // Available from early Feb (week 1)
+    },
     hubs: ['Central Hub'],
   },
   {
@@ -40,6 +47,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '13:00', end: '17:00' }, // Afternoon only
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-16', // Available from week 3 onwards
+    },
     hubs: ['South Academy'],
   },
   {
@@ -52,6 +62,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-02', // Available from early Feb (week 1)
+    },
     hubs: ['Central Hub', 'North Academy', 'South Academy'],
   },
   {
@@ -64,6 +77,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-09', // Available from week 2 onwards
+    },
     hubs: ['North Academy'],
   },
   {
@@ -76,6 +92,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-02', // Available from early Feb (week 1)
+    },
     hubs: ['South Academy'],
   },
   {
@@ -88,6 +107,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '14:00', end: '17:00' }, // Late starts Thursday
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-02', // Available from early Feb (week 1)
+    },
     hubs: ['Central Hub'],
   },
   {
@@ -100,6 +122,9 @@ export const mockStaff: Staff[] = [
       { day: 'Wednesday', start: '09:00', end: '17:00' },
       { day: 'Thursday', start: '09:00', end: '17:00' },
     ],
+    availabilityPeriod: {
+      startDateISO: '2026-02-23', // Available from week 4 onwards
+    },
     hubs: ['North Academy', 'South Academy'],
   },
 ];

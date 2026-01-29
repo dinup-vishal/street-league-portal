@@ -5,30 +5,37 @@
  * - Workshop count for the current week
  * - Disabled state when 4 workshops reached
  * - Draggable cards for assignment
+ * - Filtered by availability based on programme start date
+ * - Hidden until date is selected
  */
 
 import React, { useMemo } from 'react';
 import type { Staff, SegmentAssignment } from '../types';
+import { isStaffAvailableForProgramme } from '../utils/dateMap';
 import styles from './UpdatedStaffListPanel.module.css';
 
 interface UpdatedStaffListPanelProps {
   staff: Staff[];
   weekNumber: number;
   assignments: SegmentAssignment[];
+  startDate?: string; // Programme start date
 }
 
 export const UpdatedStaffListPanel: React.FC<UpdatedStaffListPanelProps> = ({
   staff,
   weekNumber,
   assignments,
+  startDate,
 }) => {
-  // Calculate workshop count per staff for this week
-  const staffWorkshopCount = useMemo(() => {
-    const map = new Map<string, number>();
-    staff.forEach((s) => {
-      map.set(s.id, 0);
-    });
+  // Filter staff by availability for the programme
+  const availableStaff = useMemo(() => {
+    if (!startDate) return []; // Hide staff until date is selected
+    return staff.filter((s) => isStaffAvailableForProgramme(s.availabilityPeriod?.startDateISO, startDate));
+  }, [staff, startDate]);
 
+  // Count assignments per staff member for the current week
+  const assignmentCounts = useMemo(() => {
+    const map = new Map<string, number>();
     assignments
       .filter((a) => a.week === weekNumber)
       .forEach((assignment) => {
@@ -39,7 +46,7 @@ export const UpdatedStaffListPanel: React.FC<UpdatedStaffListPanelProps> = ({
       });
 
     return map;
-  }, [staff, weekNumber, assignments]);
+  }, [assignments, weekNumber]);
 
   // Group staff by role
   const staffByRole = useMemo(() => {
@@ -48,11 +55,11 @@ export const UpdatedStaffListPanel: React.FC<UpdatedStaffListPanelProps> = ({
       Facilitator: [],
       Coordinator: [],
     };
-    staff.forEach((s) => {
+    availableStaff.forEach((s) => {
       grouped[s.role]?.push(s);
     });
     return grouped;
-  }, [staff]);
+  }, [availableStaff]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, staffMember: Staff, isDisabled: boolean) => {
     if (isDisabled) {
@@ -64,7 +71,7 @@ export const UpdatedStaffListPanel: React.FC<UpdatedStaffListPanelProps> = ({
   };
 
   const renderStaffCard = (staffMember: Staff) => {
-    const workshopCount = staffWorkshopCount.get(staffMember.id) || 0;
+    const workshopCount = assignmentCounts.get(staffMember.id) || 0;
     const isDisabled = workshopCount >= 4;
 
     const getAssignedWorkshops = (): string[] => {
@@ -131,40 +138,55 @@ export const UpdatedStaffListPanel: React.FC<UpdatedStaffListPanelProps> = ({
         <span className={styles.weekLabel}>Week {weekNumber}</span>
       </div>
 
+      {/* Show message if no date selected */}
+      {!startDate && (
+        <div className={styles.emptyState}>
+          <p>Select a start date to view available staff</p>
+        </div>
+      )}
+
+      {/* Show message if no available staff */}
+      {startDate && availableStaff.length === 0 && (
+        <div className={styles.emptyState}>
+          <p>No staff available for this date</p>
+        </div>
+      )}
+
       {/* Staff by Role */}
-      {Object.entries(staffByRole).map(([role, staffList]) => {
-        if (staffList.length === 0) return null;
+      {startDate && availableStaff.length > 0 &&
+        Object.entries(staffByRole).map(([role, staffList]) => {
+          if (staffList.length === 0) return null;
 
-        const assignedCount = staffList.filter(
-          (s) => (staffWorkshopCount.get(s.id) || 0) > 0
-        ).length;
-        const maxedCount = staffList.filter((s) => (staffWorkshopCount.get(s.id) || 0) >= 4).length;
+          const assignedCount = staffList.filter(
+            (s) => (assignmentCounts.get(s.id) || 0) > 0
+          ).length;
+          const maxedCount = staffList.filter((s) => (assignmentCounts.get(s.id) || 0) >= 4).length;
 
-        return (
-          <div key={role} className={styles.roleSection}>
-            <div className={styles.roleHeader}>
-              <span className={styles.roleName}>{role}s</span>
-              <div className={styles.roleStats}>
-                <span
-                  className={`${styles.badge} ${assignedCount > 0 ? styles.hasBadge : ''}`}
-                  title={`${assignedCount} assigned`}
-                >
-                  {assignedCount}
-                </span>
-                {maxedCount > 0 && (
-                  <span className={`${styles.badge} ${styles.maxedBadge}`} title={`${maxedCount} at max`}>
-                    ⚠ {maxedCount}
+          return (
+            <div key={role} className={styles.roleSection}>
+              <div className={styles.roleHeader}>
+                <span className={styles.roleName}>{role}s</span>
+                <div className={styles.roleStats}>
+                  <span
+                    className={`${styles.badge} ${assignedCount > 0 ? styles.hasBadge : ''}`}
+                    title={`${assignedCount} assigned`}
+                  >
+                    {assignedCount}
                   </span>
-                )}
+                  {maxedCount > 0 && (
+                    <span className={`${styles.badge} ${styles.maxedBadge}`} title={`${maxedCount} at max`}>
+                      ⚠ {maxedCount}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.staffGrid} role="list">
+                {staffList.map((s) => renderStaffCard(s))}
               </div>
             </div>
-
-            <div className={styles.staffGrid} role="list">
-              {staffList.map((s) => renderStaffCard(s))}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 };

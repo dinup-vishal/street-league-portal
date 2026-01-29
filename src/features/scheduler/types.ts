@@ -78,6 +78,10 @@ export interface Staff {
     start: string; // "09:00"
     end: string; // "17:00"
   }>;
+  availabilityPeriod?: {
+    startDateISO: string; // ISO date when staff is available from
+    endDateISO?: string; // ISO date when staff is unavailable after (optional)
+  };
   hubs?: string[];
 }
 

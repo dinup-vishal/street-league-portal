@@ -89,3 +89,23 @@ export function generateDateMapping(startDateISO: string) {
     mapping,
   };
 }
+
+/**
+ * Check if a staff member is available for a given start date + 10-week period
+ * @param staffAvailabilityStartISO Staff's availability start date
+ * @param programmeStartISO Programme start date (Monday)
+ * @returns true if staff is available for at least part of the programme
+ */
+export function isStaffAvailableForProgramme(
+  staffAvailabilityStartISO: string | undefined,
+  programmeStartISO: string
+): boolean {
+  if (!staffAvailabilityStartISO) return true; // No restriction if not specified
+
+  const staffStart = new Date(staffAvailabilityStartISO);
+  const programmeEnd = new Date(programmeStartISO);
+  programmeEnd.setDate(programmeEnd.getDate() + 70); // 10 weeks = 70 days
+
+  // Staff is available if their start date is before or on the programme end date
+  return staffStart <= programmeEnd;
+}

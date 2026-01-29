@@ -2,17 +2,17 @@
  * SchedulerScreen Component
  * Full-page scheduler replacing the modal
  * Displays 10 weeks as separate grids with time slots
- * Supports drag-and-drop staff assignment
+ * Supports drag-and-drop staff assignment and auto-assign
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Cohort, Programme, SegmentAssignment, Staff as StaffType } from '../types';
 import { TimeGrid } from './TimeGrid';
 import { UpdatedStaffListPanel } from './UpdatedStaffListPanel';
 import { buildMockProgramme } from '../mock/mockProgramme';
 import { mockStaff } from '../mock/mockStaff';
-import { generateDateMapping, toISO } from '../utils/dateMap';
+import { generateDateMapping, toISO, isStaffAvailableForProgramme } from '../utils/dateMap';
 import styles from './SchedulerScreen.module.css';
 
 interface SchedulerScreenProps {
@@ -42,6 +42,12 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
       setMondayWarning(false);
     }
   };
+
+  // Filter available staff for the programme
+  const availableStaff = useMemo(() => {
+    if (!startDate) return [];
+    return staff.filter((s) => isStaffAvailableForProgramme(s.availabilityPeriod?.startDateISO, startDate));
+  }, [staff, startDate]);
 
   // Handle drop - assign staff to a segment
   const handleDrop = useCallback(
@@ -103,6 +109,99 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
         }
       });
     });
+
+  // Check if a week is fully assigned (all workshops have at least 1 staff)
+  const isWeekComplete = useCallback(
+    (week: number): boolean => {
+      const weekProgramme = programme[week - 1];
+      if (!weekProgramme) return false;
+
+      const allWorkshops: string[] = [];
+      weekProgramme.days.forEach((day) => {
+        day.segments.forEach((seg) => {
+          if (seg.category !== 'Break') {
+            allWorkshops.push(seg.id);
+          }
+        });
+      });
+
+      if (allWorkshops.length === 0) return false;
+
+      const assignedInWeek = new Set<string>();
+      assignments
+        .filter((a) => a.week === week && a.staffIds.length > 0)
+        .forEach((a) => {
+          assignedInWeek.add(a.segmentId);
+        });
+
+      return allWorkshops.every((ws) => assignedInWeek.has(ws));
+    },
+    [programme, assignments]
+  );
+
+  // Auto-assign staff to workshops
+  const handleAutoAssign = useCallback(() => {
+    if (!startDate) {
+      setErrors(['Please select a start date first']);
+      return;
+    }
+
+    const newAssignments = [...assignments];
+    const staffWorkshopCount = new Map<string, number>();
+
+    // Initialize workshop count
+    availableStaff.forEach((s) => staffWorkshopCount.set(s.id, 0));
+
+    // Get all workshops for current week (non-Break segments)
+    const weekProgramme = programme[currentWeek - 1];
+    if (!weekProgramme) return;
+
+    const workshopsToAssign: Array<{ segmentId: string; day: any }> = [];
+    weekProgramme.days.forEach((day) => {
+      day.segments.forEach((seg) => {
+        if (seg.category !== 'Break') {
+          workshopsToAssign.push({ segmentId: seg.id, day: day.day });
+        }
+      });
+    });
+
+    // Assign staff to workshops (one per workshop, max 4 per staff)
+    for (const workshop of workshopsToAssign) {
+      // Find first available staff (not yet at 4 workshops)
+      const assignableStaff = availableStaff.find((s) => {
+        const count = staffWorkshopCount.get(s.id) || 0;
+        // Check if already assigned to this workshop
+        const alreadyAssigned = newAssignments.some(
+          (a) => a.segmentId === workshop.segmentId && a.staffIds.includes(s.id)
+        );
+        return count < 4 && !alreadyAssigned;
+      });
+
+      if (assignableStaff) {
+        // Check if assignment already exists
+        const existing = newAssignments.find(
+          (a) => a.segmentId === workshop.segmentId && a.week === currentWeek && a.day === workshop.day
+        );
+
+        if (existing) {
+          if (!existing.staffIds.includes(assignableStaff.id)) {
+            existing.staffIds.push(assignableStaff.id);
+            staffWorkshopCount.set(assignableStaff.id, (staffWorkshopCount.get(assignableStaff.id) || 0) + 1);
+          }
+        } else {
+          newAssignments.push({
+            segmentId: workshop.segmentId,
+            week: currentWeek,
+            day: workshop.day,
+            staffIds: [assignableStaff.id],
+          });
+          staffWorkshopCount.set(assignableStaff.id, (staffWorkshopCount.get(assignableStaff.id) || 0) + 1);
+        }
+      }
+    }
+
+    setAssignments(newAssignments);
+  }, [startDate, programme, currentWeek, assignments, availableStaff]);
 
   const handleSave = () => {
     const newErrors: string[] = [];
@@ -190,6 +289,16 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
                 <span className={styles.infoValue}>{cohort.academyId}</span>
               </div>
             </div>
+
+            {/* Auto Assign Button */}
+            <button
+              onClick={handleAutoAssign}
+              disabled={!startDate || availableStaff.length === 0}
+              className={styles.autoAssignButton}
+              title={!startDate ? 'Select a date first' : 'Auto assign staff to workshops'}
+            >
+              Auto Assign Staff
+            </button>
           </div>
 
           {/* Errors */}
@@ -211,6 +320,10 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
             <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>Assignments:</span>
               <span className={styles.summaryValue}>{assignments.length}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Available Staff:</span>
+              <span className={styles.summaryValue}>{availableStaff.length}</span>
             </div>
             <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>Current Week:</span>
@@ -246,16 +359,22 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
             </button>
 
             <div className={styles.weekDisplay}>
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((week) => (
-                <button
-                  key={week}
-                  onClick={() => setCurrentWeek(week)}
-                  className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''}`}
-                  aria-current={currentWeek === week ? 'page' : undefined}
-                >
-                  {week}
-                </button>
-              ))}
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((week) => {
+                const isComplete = isWeekComplete(week);
+                return (
+                  <button
+                    key={week}
+                    onClick={() => setCurrentWeek(week)}
+                    className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
+                      isComplete ? styles.complete : ''
+                    }`}
+                    aria-current={currentWeek === week ? 'page' : undefined}
+                    title={isComplete ? 'Week fully assigned' : ''}
+                  >
+                    {week}
+                  </button>
+                );
+              })}
             </div>
 
             <button
@@ -276,7 +395,7 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
                   weekNumber={currentWeek}
                   days={programme[currentWeek - 1]!.days}
                   assignments={assignments}
-                  staff={staff}
+                  staff={availableStaff}
                   onDrop={handleDrop}
                   disabledStaffIds={disabledStaffIds}
                 />
@@ -286,9 +405,10 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
             {/* Staff Panel */}
             <div className={styles.staffArea}>
               <UpdatedStaffListPanel
-                staff={staff}
+                staff={availableStaff}
                 weekNumber={currentWeek}
                 assignments={assignments}
+                startDate={startDate}
               />
             </div>
           </div>

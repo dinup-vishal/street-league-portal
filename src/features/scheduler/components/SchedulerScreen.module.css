@@ -351,18 +351,21 @@
   padding: 1rem;
   flex: 1;
   overflow: hidden;
+  width: 100%;
 }
 
 .gridArea {
-  overflow-y: auto;
+  overflow: auto;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background: #ffffff;
+  min-width: 0;
 }
 
 .staffArea {
-  overflow: hidden;
+  overflow: auto;
   border-radius: 8px;
+  min-width: 0;
 }
 
 /* Workshop Grid Styles */

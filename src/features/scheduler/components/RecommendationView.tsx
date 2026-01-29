@@ -13,12 +13,23 @@ import { mockStaff } from '../mock/mockStaff';
 import { isStaffAvailableForProgramme } from '../utils/dateMap';
 import styles from './SchedulerScreen.module.css';
 
-interface RecommendationViewProps {
-  cohort?: any;
-}
+// Helper function to get default Monday date
+const getDefaultMonday = (): string => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(monday.getDate() + daysToMonday);
+  const year = monday.getFullYear();
+  const month = String(monday.getMonth() + 1).padStart(2, '0');
+  const day = String(monday.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
-export const RecommendationView: React.FC<RecommendationViewProps> = () => {
-  const [startDate, setStartDate] = useState<string>('');
+export const RecommendationView: React.FC = () => {
+  // Initialize with default Monday
+  const defaultDate = getDefaultMonday();
+  const [startDate, setStartDate] = useState<string>(defaultDate);
   const [mondayWarning, setMondayWarning] = useState(false);
   const [assignments, setAssignments] = useState<SegmentAssignment[]>([]);
   const [currentWeek, setCurrentWeek] = useState(1);
@@ -48,14 +59,12 @@ export const RecommendationView: React.FC<RecommendationViewProps> = () => {
   // Handle drop - assign staff to a segment
   const handleDrop = useCallback(
     (segmentId: string, week: number, day: string, staffId: string) => {
-      // Check if staff already assigned to this segment
       const existingAssignment = assignments.find(
         (a) => a.segmentId === segmentId && a.week === week && a.day === (day as Weekday)
       );
 
       if (existingAssignment) {
         if (existingAssignment.staffIds.includes(staffId)) {
-          // Remove staff from this segment
           const updated = {
             ...existingAssignment,
             staffIds: existingAssignment.staffIds.filter((id) => id !== staffId),
@@ -66,7 +75,6 @@ export const RecommendationView: React.FC<RecommendationViewProps> = () => {
             setAssignments(assignments.map((a) => (a === existingAssignment ? updated : a)));
           }
         } else {
-          // Add staff to this segment
           setAssignments(
             assignments.map((a) =>
               a === existingAssignment
@@ -76,7 +84,6 @@ export const RecommendationView: React.FC<RecommendationViewProps> = () => {
           );
         }
       } else {
-        // Create new assignment
         setAssignments([
           ...assignments,
           {
@@ -91,7 +98,7 @@ export const RecommendationView: React.FC<RecommendationViewProps> = () => {
     [assignments]
   );
 
-  // Get disabled staff for current week (those with 4+ workshops)
+  // Get disabled staff for current week
   const disabledStaffIds = new Set<string>();
   assignments
     .filter((a) => a.week === currentWeek)
@@ -136,7 +143,7 @@ export const RecommendationView: React.FC<RecommendationViewProps> = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.headerSection}>
+        <div className={styles.headerContent}>
           <h1 className={styles.title}>Recommendation View</h1>
           <p className={styles.subtitle}>View recommended schedule and assign staff</p>
         </div>
@@ -166,81 +173,73 @@ export const RecommendationView: React.FC<RecommendationViewProps> = () => {
           </div>
         </aside>
 
-        {/* Main Area */}
-        {!startDate ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📅</div>
-            <h2 className={styles.emptyTitle}>Select a Date</h2>
-            <p className={styles.emptyText}>Choose a Monday to view the recommended schedule.</p>
+        {/* Main Area - Always show grid */}
+        <main className={styles.mainArea}>
+          {/* Week Selector */}
+          <div className={styles.weekSelector}>
+            <button
+              onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
+              disabled={currentWeek === 1}
+              className={styles.weekNavButton}
+            >
+              ← Previous
+            </button>
+
+            <div className={styles.weekDisplay}>
+              {Array.from({ length: programme.length }, (_, i) => i + 1).map((week) => {
+                const isComplete = isWeekComplete(week);
+                return (
+                  <button
+                    key={week}
+                    onClick={() => setCurrentWeek(week)}
+                    className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
+                      isComplete ? styles.complete : ''
+                    }`}
+                    aria-current={currentWeek === week ? 'page' : undefined}
+                    title={isComplete ? 'Week fully assigned' : ''}
+                  >
+                    {week}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setCurrentWeek(Math.min(programme.length, currentWeek + 1))}
+              disabled={currentWeek === programme.length}
+              className={styles.weekNavButton}
+            >
+              Next →
+            </button>
           </div>
-        ) : (
-          <main className={styles.mainArea}>
-            {/* Week Selector */}
-            <div className={styles.weekSelector}>
-              <button
-                onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
-                disabled={currentWeek === 1}
-                className={styles.weekNavButton}
-              >
-                ← Previous
-              </button>
 
-              <div className={styles.weekDisplay}>
-                {Array.from({ length: programme.length }, (_, i) => i + 1).map((week) => {
-                  const isComplete = isWeekComplete(week);
-                  return (
-                    <button
-                      key={week}
-                      onClick={() => setCurrentWeek(week)}
-                      className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
-                        isComplete ? styles.complete : ''
-                      }`}
-                      aria-current={currentWeek === week ? 'page' : undefined}
-                      title={isComplete ? 'Week fully assigned' : ''}
-                    >
-                      {week}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => setCurrentWeek(Math.min(programme.length, currentWeek + 1))}
-                disabled={currentWeek === programme.length}
-                className={styles.weekNavButton}
-              >
-                Next →
-              </button>
-            </div>
-
-            {/* Week Content */}
-            <div className={styles.weekContent}>
-              {/* Time Grid */}
-              <div className={styles.gridArea}>
-                {programme[currentWeek - 1] && (
-                  <TimeGrid
-                    weekNumber={currentWeek}
-                    days={programme[currentWeek - 1]!.days}
-                    assignments={assignments}
-                    staff={availableStaff}
-                    onDrop={handleDrop}
-                    disabledStaffIds={disabledStaffIds}
-                  />
-                )}
-              </div>
-
-              {/* Staff Panel */}
-              <div className={styles.staffArea}>
-                <UpdatedStaffListPanel
-                  staff={availableStaff}
+          {/* Week Content */}
+          <div className={styles.weekContent}>
+            {/* Time Grid */}
+            <div className={styles.gridArea}>
+              {programme[currentWeek - 1] && (
+                <TimeGrid
                   weekNumber={currentWeek}
+                  days={programme[currentWeek - 1]!.days}
                   assignments={assignments}
-                  startDate={startDate}
+                  staff={availableStaff}
+                  onDrop={handleDrop}
+                  disabledStaffIds={disabledStaffIds}
                 />
-              </div>
+              )}
             </div>
-          </main>
-        )}
+
+            {/* Staff Panel */}
+            <div className={styles.staffArea}>
+              <UpdatedStaffListPanel
+                staff={availableStaff}
+                weekNumber={currentWeek}
+                assignments={assignments}
+                startDate={startDate}
+              />
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

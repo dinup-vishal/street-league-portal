@@ -1,65 +1,38 @@
 /**
  * PlannerView.tsx
  * Custom planner with date selection and staff assignment
- * Mirrors Recommendation view layout with workshop creation from lessons
+ * Uses TimeGrid for display (same as Recommendation view)
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import type { Programme, SegmentAssignment, Staff as StaffType } from '../types';
+import type { Programme, SegmentAssignment, Staff as StaffType, Weekday } from '../types';
+import { TimeGrid } from './TimeGrid';
 import { buildMockProgramme } from '../mock/mockProgramme';
 import { mockStaff } from '../mock/mockStaff';
 import { isStaffAvailableForProgramme } from '../utils/dateMap';
 import { UpdatedStaffListPanel } from './UpdatedStaffListPanel';
-import { CreateWorkshopModal } from './CreateWorkshopModal';
 import styles from './SchedulerScreen.module.css';
 
-interface CustomSegment {
-  id: string;
-  title: string;
-  durationMinutes: number;
-  category: string;
-  timeSlotId?: string;
-  lessonId?: string;
-  lessonName?: string;
-}
-
-interface CustomDayPlan {
-  day: string;
-  segments: CustomSegment[];
-}
-
-interface CustomProgrammeWeek {
-  week: number;
-  days: CustomDayPlan[];
-}
-
-interface CustomProgramme extends Array<CustomProgrammeWeek> {}
+// Helper function to get default Monday date
+const getDefaultMonday = (): string => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(monday.getDate() + daysToMonday);
+  const year = monday.getFullYear();
+  const month = String(monday.getMonth() + 1).padStart(2, '0');
+  const day = String(monday.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const PlannerView: React.FC = () => {
-  const baseProgramme: Programme = buildMockProgramme();
-  const [customProgramme, setCustomProgramme] = useState<CustomProgramme>(
-    baseProgramme.map((week) => ({
-      week: week.week,
-      days: week.days.map((day) => ({
-        day: day.day,
-        segments: day.segments as CustomSegment[],
-      })),
-    })) as CustomProgramme
-  );
-
-  // State management matching RecommendationView
-  const [startDate, setStartDate] = useState<string>('');
+  // State management - initialize with default Monday
+  const defaultDate = getDefaultMonday();
+  const [startDate, setStartDate] = useState<string>(defaultDate);
   const [mondayWarning, setMondayWarning] = useState(false);
-  const [assignments] = useState<SegmentAssignment[]>([]);
+  const [assignments, setAssignments] = useState<SegmentAssignment[]>([]);
   const [currentWeek, setCurrentWeek] = useState(1);
-
-  // Modal state for workshop creation
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{
-    week: number;
-    day: string;
-    segmentId: string;
-  } | null>(null);
 
   const programme: Programme = buildMockProgramme();
   const staff: StaffType[] = mockStaff;
@@ -83,8 +56,48 @@ export const PlannerView: React.FC = () => {
     return staff.filter((s) => isStaffAvailableForProgramme(s.availabilityPeriod?.startDateISO, startDate));
   }, [staff, startDate]);
 
-  // Note: handleDrop logic can be used for drag-and-drop to staff if needed in future
-  
+  // Handle drop - assign staff to a segment
+  const handleDrop = useCallback(
+    (segmentId: string, week: number, day: string, staffId: string) => {
+      const existingAssignment = assignments.find(
+        (a) => a.segmentId === segmentId && a.week === week && a.day === (day as Weekday)
+      );
+
+      if (existingAssignment) {
+        if (existingAssignment.staffIds.includes(staffId)) {
+          const updated = {
+            ...existingAssignment,
+            staffIds: existingAssignment.staffIds.filter((id) => id !== staffId),
+          };
+          if (updated.staffIds.length === 0) {
+            setAssignments(assignments.filter((a) => a !== existingAssignment));
+          } else {
+            setAssignments(assignments.map((a) => (a === existingAssignment ? updated : a)));
+          }
+        } else {
+          setAssignments(
+            assignments.map((a) =>
+              a === existingAssignment
+                ? { ...a, staffIds: [...a.staffIds, staffId] }
+                : a
+            )
+          );
+        }
+      } else {
+        setAssignments([
+          ...assignments,
+          {
+            segmentId,
+            week,
+            day: day as Weekday,
+            staffIds: [staffId],
+          },
+        ]);
+      }
+    },
+    [assignments]
+  );
+
   // Get disabled staff for current week
   const disabledStaffIds = new Set<string>();
   assignments
@@ -127,82 +140,6 @@ export const PlannerView: React.FC = () => {
     [programme, assignments]
   );
 
-  // Handle workshop creation from modal
-  const handleAddWorkshop = (week: number, day: string, segmentId: string) => {
-    setSelectedSlot({ week, day, segmentId });
-    setModalOpen(true);
-  };
-
-  const handleCreateWorkshop = (
-    lessonId: string,
-    lessonName: string,
-    workshopName: string
-  ) => {
-    if (!selectedSlot) return;
-
-    setCustomProgramme((prev) => {
-      return prev.map((week) => {
-        if (week.week !== selectedSlot.week) return week;
-
-        return {
-          ...week,
-          days: week.days.map((day) => {
-            if (day.day !== selectedSlot.day) return day;
-
-            return {
-              ...day,
-              segments: day.segments.map((segment) => {
-                if (segment.id === selectedSlot.segmentId) {
-                  return {
-                    ...segment,
-                    title: workshopName,
-                    lessonId,
-                    lessonName,
-                    category: 'Workshop' as const,
-                  };
-                }
-                return segment;
-              }),
-            };
-          }),
-        };
-      }) as CustomProgramme;
-    });
-
-    setModalOpen(false);
-    setSelectedSlot(null);
-  };
-
-  const handleDeleteWorkshop = (week: number, day: string, segmentId: string) => {
-    setCustomProgramme((prev) => {
-      return prev.map((w) => {
-        if (w.week !== week) return w;
-
-        return {
-          ...w,
-          days: w.days.map((d) => {
-            if (d.day !== day) return d;
-
-            return {
-              ...d,
-              segments: d.segments.map((seg) => {
-                if (seg.id === segmentId && seg.category === 'Workshop' && seg.lessonId) {
-                  return {
-                    ...seg,
-                    title: 'Workshop',
-                    lessonId: undefined,
-                    lessonName: undefined,
-                  };
-                }
-                return seg;
-              }),
-            };
-          }),
-        };
-      }) as CustomProgramme;
-    });
-  };
-
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -238,164 +175,74 @@ export const PlannerView: React.FC = () => {
           </div>
         </aside>
 
-        {/* Main Area */}
-        {!startDate ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📅</div>
-            <h2 className={styles.emptyTitle}>Select a Date</h2>
-            <p className={styles.emptyText}>Choose a Monday to start planning your workshops.</p>
+        {/* Main Area - Always show grid with default date */}
+        <main className={styles.mainArea}>
+          {/* Week Selector */}
+          <div className={styles.weekSelector}>
+            <button
+              onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
+              disabled={currentWeek === 1}
+              className={styles.weekNavButton}
+            >
+              ← Previous
+            </button>
+
+            <div className={styles.weekDisplay}>
+              {Array.from({ length: programme.length }, (_, i) => i + 1).map((week) => {
+                const isComplete = isWeekComplete(week);
+                return (
+                  <button
+                    key={week}
+                    onClick={() => setCurrentWeek(week)}
+                    className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
+                      isComplete ? styles.complete : ''
+                    }`}
+                    aria-current={currentWeek === week ? 'page' : undefined}
+                    title={isComplete ? 'Week fully assigned' : ''}
+                  >
+                    {week}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setCurrentWeek(Math.min(programme.length, currentWeek + 1))}
+              disabled={currentWeek === programme.length}
+              className={styles.weekNavButton}
+            >
+              Next →
+            </button>
           </div>
-        ) : (
-          <main className={styles.mainArea}>
-            {/* Week Selector */}
-            <div className={styles.weekSelector}>
-              <button
-                onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
-                disabled={currentWeek === 1}
-                className={styles.weekNavButton}
-              >
-                ← Previous
-              </button>
 
-              <div className={styles.weekDisplay}>
-                {Array.from({ length: programme.length }, (_, i) => i + 1).map((week) => {
-                  const isComplete = isWeekComplete(week);
-                  return (
-                    <button
-                      key={week}
-                      onClick={() => setCurrentWeek(week)}
-                      className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
-                        isComplete ? styles.complete : ''
-                      }`}
-                      aria-current={currentWeek === week ? 'page' : undefined}
-                      title={isComplete ? 'Week fully assigned' : ''}
-                    >
-                      {week}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => setCurrentWeek(Math.min(programme.length, currentWeek + 1))}
-                disabled={currentWeek === programme.length}
-                className={styles.weekNavButton}
-              >
-                Next →
-              </button>
-            </div>
-
-            {/* Week Content */}
-            <div className={styles.weekContent}>
-              {/* Workshop Grid */}
-              <div className={styles.gridArea}>
-                {customProgramme[currentWeek - 1] && (
-                  <div className={styles.gridWrapper}>
-                    {/* Grid with Workshop Buttons */}
-                    <table className={styles.grid}>
-                      <thead>
-                        <tr>
-                          <th className={styles.timeHeader}>Time</th>
-                          {customProgramme[currentWeek - 1]!.days.map((day) => (
-                            <th key={day.day}>{day.day}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {customProgramme[currentWeek - 1]!.days[0]?.segments.map((_, segIdx) => (
-                          <tr key={segIdx}>
-                            <td className={styles.timeLabel}>Segment {segIdx + 1}</td>
-                            {customProgramme[currentWeek - 1]!.days.map((day) => {
-                              const segment = day.segments[segIdx];
-                              if (!segment) return <td key={day.day} />;
-
-                              return (
-                                <td key={`${day.day}-${segment.id}`} className={styles.cellContent}>
-                                  {segment.category === 'Break' ? (
-                                    <div className={styles.breakSegment}>
-                                      <span>{segment.title}</span>
-                                      <span className={styles.duration}>({segment.durationMinutes}m)</span>
-                                    </div>
-                                  ) : segment.lessonId ? (
-                                    <div
-                                      className={styles.workshopSegment}
-                                      draggable
-                                      onDragStart={(e) => {
-                                        e.dataTransfer.effectAllowed = 'move';
-                                        e.dataTransfer.setData(
-                                          'application/json',
-                                          JSON.stringify({
-                                            type: 'workshop',
-                                            segmentId: segment.id,
-                                            week: currentWeek,
-                                            day: day.day,
-                                          })
-                                        );
-                                      }}
-                                    >
-                                      <div className={styles.workshopContent}>
-                                        <span className={styles.workshopTitle}>{segment.title}</span>
-                                        <span className={styles.lessonBadge}>{segment.lessonName}</span>
-                                      </div>
-                                      <button
-                                        className={styles.deleteBtn}
-                                        onClick={() =>
-                                          handleDeleteWorkshop(currentWeek, day.day, segment.id)
-                                        }
-                                        aria-label="Delete workshop"
-                                        title="Delete"
-                                      >
-                                        ×
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      className={styles.createBtn}
-                                      onClick={() =>
-                                        handleAddWorkshop(currentWeek, day.day, segment.id)
-                                      }
-                                    >
-                                      Create
-                                    </button>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Staff Panel - Drag and Drop Target */}
-              <div className={styles.staffArea}>
-                <UpdatedStaffListPanel
-                  staff={availableStaff}
+          {/* Week Content */}
+          <div className={styles.weekContent}>
+            {/* Time Grid */}
+            <div className={styles.gridArea}>
+              {programme[currentWeek - 1] && (
+                <TimeGrid
                   weekNumber={currentWeek}
+                  days={programme[currentWeek - 1]!.days}
                   assignments={assignments}
-                  startDate={startDate}
+                  staff={availableStaff}
+                  onDrop={handleDrop}
+                  disabledStaffIds={disabledStaffIds}
                 />
-              </div>
+              )}
             </div>
-          </main>
-        )}
-      </div>
 
-      {/* Create Workshop Modal */}
-      {modalOpen && selectedSlot && (
-        <CreateWorkshopModal
-          isOpen={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedSlot(null);
-          }}
-          onSubmit={handleCreateWorkshop}
-          week={selectedSlot.week}
-          day={selectedSlot.day}
-        />
-      )}
+            {/* Staff Panel - Drag and Drop Target */}
+            <div className={styles.staffArea}>
+              <UpdatedStaffListPanel
+                staff={availableStaff}
+                weekNumber={currentWeek}
+                assignments={assignments}
+                startDate={startDate}
+              />
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

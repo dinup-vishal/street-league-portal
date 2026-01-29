@@ -1,35 +1,27 @@
 /**
- * RecommendationView.tsx
- * Original scheduler screen - displays recommended schedule
- * Allows staff assignment to recommended workshops
+ * RecommendationView Component
+ * Original scheduler - assign staff to pre-defined workshops
+ * Shows 10 weeks with time-based grid
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import type { Programme, SegmentAssignment, Staff as StaffType, Weekday } from '../types';
+import { useNavigate } from 'react-router-dom';
+import type { Cohort, Programme, SegmentAssignment, Staff as StaffType } from '../types';
 import { TimeGrid } from './TimeGrid';
 import { UpdatedStaffListPanel } from './UpdatedStaffListPanel';
 import { buildMockProgramme } from '../mock/mockProgramme';
 import { mockStaff } from '../mock/mockStaff';
-import { isStaffAvailableForProgramme } from '../utils/dateMap';
+import { generateDateMapping, toISO, isStaffAvailableForProgramme } from '../utils/dateMap';
 import styles from './SchedulerScreen.module.css';
 
-// Helper function to get default Monday date
-const getDefaultMonday = (): string => {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
-  const monday = new Date(today);
-  monday.setDate(monday.getDate() + daysToMonday);
-  const year = monday.getFullYear();
-  const month = String(monday.getMonth() + 1).padStart(2, '0');
-  const day = String(monday.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+interface RecommendationViewProps {
+  cohort: Cohort;
+}
 
-export const RecommendationView: React.FC = () => {
-  // Initialize with default Monday
-  const defaultDate = getDefaultMonday();
-  const [startDate, setStartDate] = useState<string>(defaultDate);
+export const RecommendationView: React.FC<RecommendationViewProps> = ({ cohort }) => {
+  const navigate = useNavigate();
+  const [startDate, setStartDate] = useState<string>('');
+  const [errors, setErrors] = useState<string[]>([]);
   const [mondayWarning, setMondayWarning] = useState(false);
   const [assignments, setAssignments] = useState<SegmentAssignment[]>([]);
   const [currentWeek, setCurrentWeek] = useState(1);
@@ -59,12 +51,14 @@ export const RecommendationView: React.FC = () => {
   // Handle drop - assign staff to a segment
   const handleDrop = useCallback(
     (segmentId: string, week: number, day: string, staffId: string) => {
+      // Check if staff already assigned to this segment
       const existingAssignment = assignments.find(
-        (a) => a.segmentId === segmentId && a.week === week && a.day === (day as Weekday)
+        (a) => a.segmentId === segmentId && a.week === week && a.day === (day as any)
       );
 
       if (existingAssignment) {
         if (existingAssignment.staffIds.includes(staffId)) {
+          // Remove staff from this segment
           const updated = {
             ...existingAssignment,
             staffIds: existingAssignment.staffIds.filter((id) => id !== staffId),
@@ -75,6 +69,7 @@ export const RecommendationView: React.FC = () => {
             setAssignments(assignments.map((a) => (a === existingAssignment ? updated : a)));
           }
         } else {
+          // Add staff to this segment
           setAssignments(
             assignments.map((a) =>
               a === existingAssignment
@@ -84,12 +79,13 @@ export const RecommendationView: React.FC = () => {
           );
         }
       } else {
+        // Create new assignment
         setAssignments([
           ...assignments,
           {
             segmentId,
             week,
-            day: day as Weekday,
+            day: day as any,
             staffIds: [staffId],
           },
         ]);
@@ -98,20 +94,22 @@ export const RecommendationView: React.FC = () => {
     [assignments]
   );
 
-  // Get disabled staff for current week
+  // Get disabled staff for current week (those with 4+ workshops)
   const disabledStaffIds = new Set<string>();
   assignments
     .filter((a) => a.week === currentWeek)
     .forEach((a) => {
-      a.staffIds.forEach((id) => {
-        const count = assignments.filter(
-          (a2) => a2.week === currentWeek && a2.staffIds.includes(id)
-        ).length;
-        if (count >= 4) disabledStaffIds.add(id);
+      a.staffIds.forEach((staffId) => {
+        const count = assignments
+          .filter((assign) => assign.week === currentWeek && assign.staffIds.includes(staffId))
+          .length;
+        if (count >= 4) {
+          disabledStaffIds.add(staffId);
+        }
       });
     });
 
-  // Check if a week is fully assigned
+  // Check if a week is fully assigned (all workshops have at least 1 staff)
   const isWeekComplete = useCallback(
     (week: number): boolean => {
       const weekProgramme = programme[week - 1];
@@ -140,107 +138,270 @@ export const RecommendationView: React.FC = () => {
     [programme, assignments]
   );
 
+  // Auto-assign staff to workshops
+  const handleAutoAssign = useCallback(() => {
+    if (!startDate) {
+      setErrors(['Please select a start date first']);
+      return;
+    }
+
+    const newAssignments = [...assignments];
+    const staffWorkshopCount = new Map<string, number>();
+
+    // Initialize workshop count
+    availableStaff.forEach((s) => staffWorkshopCount.set(s.id, 0));
+
+    // Get all workshops for current week (non-Break segments)
+    const weekProgramme = programme[currentWeek - 1];
+    if (!weekProgramme) return;
+
+    const workshopsToAssign: Array<{ segmentId: string; day: any }> = [];
+    weekProgramme.days.forEach((day) => {
+      day.segments.forEach((seg) => {
+        if (seg.category !== 'Break') {
+          workshopsToAssign.push({ segmentId: seg.id, day: day.day });
+        }
+      });
+    });
+
+    // Assign staff to workshops (one per workshop, max 4 per staff)
+    for (const workshop of workshopsToAssign) {
+      // Find first available staff (not yet at 4 workshops)
+      const assignableStaff = availableStaff.find((s) => {
+        const count = staffWorkshopCount.get(s.id) || 0;
+        // Check if already assigned to this workshop
+        const alreadyAssigned = newAssignments.some(
+          (a) => a.segmentId === workshop.segmentId && a.staffIds.includes(s.id)
+        );
+        return count < 4 && !alreadyAssigned;
+      });
+
+      if (assignableStaff) {
+        // Check if assignment already exists
+        const existing = newAssignments.find(
+          (a) => a.segmentId === workshop.segmentId && a.week === currentWeek && a.day === workshop.day
+        );
+
+        if (existing) {
+          if (!existing.staffIds.includes(assignableStaff.id)) {
+            existing.staffIds.push(assignableStaff.id);
+            staffWorkshopCount.set(assignableStaff.id, (staffWorkshopCount.get(assignableStaff.id) || 0) + 1);
+          }
+        } else {
+          newAssignments.push({
+            segmentId: workshop.segmentId,
+            week: currentWeek,
+            day: workshop.day,
+            staffIds: [assignableStaff.id],
+          });
+          staffWorkshopCount.set(assignableStaff.id, (staffWorkshopCount.get(assignableStaff.id) || 0) + 1);
+        }
+      }
+    }
+
+    setAssignments(newAssignments);
+  }, [startDate, programme, currentWeek, assignments, availableStaff]);
+
+  const handleSave = () => {
+    const newErrors: string[] = [];
+
+    if (!startDate) {
+      newErrors.push('Start date is required.');
+    }
+
+    if (assignments.length === 0) {
+      newErrors.push('Please assign staff to at least one workshop.');
+    }
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // TODO: Send to backend
+    console.log('Schedule payload:', {
+      cohortId: cohort.cohortId,
+      startDateISO: toISO(new Date(startDate)),
+      assignments,
+      dateMapping: generateDateMapping(new Date(startDate) as any),
+    });
+
+    setErrors([]);
+    // Navigate back to scheduler page
+    navigate('/scheduler');
+  };
+
+  const handleCancel = () => {
+    if (
+      assignments.length > 0 &&
+      !window.confirm('You have unsaved assignments. Are you sure?')
+    ) {
+      return;
+    }
+    navigate('/scheduler');
+  };
+
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>Recommendation View</h1>
-          <p className={styles.subtitle}>View recommended schedule and assign staff</p>
+    <div className={styles.mainContent}>
+      {/* Sidebar - Controls & Info */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarSection}>
+          <h2 className={styles.sectionTitle}>Programme Setup</h2>
+
+          {/* Date Picker */}
+          <div className={styles.formGroup}>
+            <label htmlFor="startDate" className={styles.label}>
+              Start Date (Monday)
+            </label>
+            <input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={handleDateChange}
+              className={styles.input}
+            />
+            {mondayWarning && (
+              <p className={styles.warning}>⚠️ Selected date is not a Monday</p>
+            )}
+          </div>
+
+          {/* Cohort Info */}
+          <div className={styles.cohortInfo}>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Cohort:</span>
+              <span className={styles.infoValue}>{cohort.cohortCode}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Academy:</span>
+              <span className={styles.infoValue}>{cohort.academyId}</span>
+            </div>
+          </div>
+
+          {/* Auto Assign Button */}
+          <button
+            onClick={handleAutoAssign}
+            disabled={!startDate || availableStaff.length === 0}
+            className={styles.autoAssignButton}
+            title={!startDate ? 'Select a date first' : 'Auto assign staff to workshops'}
+          >
+            Auto Assign Staff
+          </button>
         </div>
-      </header>
 
-      <div className={styles.mainContent}>
-        {/* Sidebar */}
-        <aside className={styles.sidebar}>
-          <div className={styles.sidebarSection}>
-            <h2 className={styles.sectionTitle}>Programme Setup</h2>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="startDate" className={styles.label}>
-                Start Date (Monday)
-              </label>
-              <input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={handleDateChange}
-                className={styles.input}
-              />
-              {mondayWarning && (
-                <p className={styles.warning}>⚠️ Selected date is not a Monday</p>
-              )}
-            </div>
+        {/* Errors */}
+        {errors.length > 0 && (
+          <div className={styles.errorSection}>
+            <h3 className={styles.errorTitle}>Issues</h3>
+            <ul className={styles.errorList}>
+              {errors.map((err, idx) => (
+                <li key={idx} className={styles.errorItem}>
+                  {err}
+                </li>
+              ))}
+            </ul>
           </div>
-        </aside>
+        )}
 
-        {/* Main Area - Always show grid */}
-        <main className={styles.mainArea}>
-          {/* Week Selector */}
-          <div className={styles.weekSelector}>
-            <button
-              onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
-              disabled={currentWeek === 1}
-              className={styles.weekNavButton}
-            >
-              ← Previous
-            </button>
+        {/* Summary */}
+        <div className={styles.summary}>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Assignments:</span>
+            <span className={styles.summaryValue}>{assignments.length}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Available Staff:</span>
+            <span className={styles.summaryValue}>{availableStaff.length}</span>
+          </div>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Current Week:</span>
+            <span className={styles.summaryValue}>{currentWeek}/10</span>
+          </div>
+        </div>
 
-            <div className={styles.weekDisplay}>
-              {Array.from({ length: programme.length }, (_, i) => i + 1).map((week) => {
-                const isComplete = isWeekComplete(week);
-                return (
-                  <button
-                    key={week}
-                    onClick={() => setCurrentWeek(week)}
-                    className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
-                      isComplete ? styles.complete : ''
-                    }`}
-                    aria-current={currentWeek === week ? 'page' : undefined}
-                    title={isComplete ? 'Week fully assigned' : ''}
-                  >
-                    {week}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Actions */}
+        <div className={styles.actions}>
+          <button
+            onClick={handleSave}
+            className={styles.saveButton}
+            disabled={!startDate || assignments.length === 0}
+          >
+            Save Schedule
+          </button>
+          <button onClick={handleCancel} className={styles.cancelButton}>
+            Cancel
+          </button>
+        </div>
+      </aside>
 
-            <button
-              onClick={() => setCurrentWeek(Math.min(programme.length, currentWeek + 1))}
-              disabled={currentWeek === programme.length}
-              className={styles.weekNavButton}
-            >
-              Next →
-            </button>
+      {/* Main Grid Area */}
+      <main className={styles.mainArea}>
+        {/* Week Selector */}
+        <div className={styles.weekSelector}>
+          <button
+            onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
+            disabled={currentWeek === 1}
+            className={styles.weekNavButton}
+          >
+            ← Previous
+          </button>
+
+          <div className={styles.weekDisplay}>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((week) => {
+              const isComplete = isWeekComplete(week);
+              return (
+                <button
+                  key={week}
+                  onClick={() => setCurrentWeek(week)}
+                  className={`${styles.weekButton} ${currentWeek === week ? styles.active : ''} ${
+                    isComplete ? styles.complete : ''
+                  }`}
+                  aria-current={currentWeek === week ? 'page' : undefined}
+                  title={isComplete ? 'Week fully assigned' : ''}
+                >
+                  {week}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Week Content */}
-          <div className={styles.weekContent}>
-            {/* Time Grid */}
-            <div className={styles.gridArea}>
-              {programme[currentWeek - 1] && (
-                <TimeGrid
-                  weekNumber={currentWeek}
-                  days={programme[currentWeek - 1]!.days}
-                  assignments={assignments}
-                  staff={availableStaff}
-                  onDrop={handleDrop}
-                  disabledStaffIds={disabledStaffIds}
-                />
-              )}
-            </div>
+          <button
+            onClick={() => setCurrentWeek(Math.min(10, currentWeek + 1))}
+            disabled={currentWeek === 10}
+            className={styles.weekNavButton}
+          >
+            Next →
+          </button>
+        </div>
 
-            {/* Staff Panel */}
-            <div className={styles.staffArea}>
-              <UpdatedStaffListPanel
-                staff={availableStaff}
+        {/* Current Week Grid + Staff Panel */}
+        <div className={styles.weekContent}>
+          {/* Time Grid */}
+          <div className={styles.gridArea}>
+            {programme[currentWeek - 1] && (
+              <TimeGrid
                 weekNumber={currentWeek}
+                days={programme[currentWeek - 1]!.days}
                 assignments={assignments}
-                startDate={startDate}
+                staff={availableStaff}
+                onDrop={handleDrop}
+                disabledStaffIds={disabledStaffIds}
               />
-            </div>
+            )}
           </div>
-        </main>
-      </div>
+
+          {/* Staff Panel */}
+          <div className={styles.staffArea}>
+            <UpdatedStaffListPanel
+              staff={availableStaff}
+              weekNumber={currentWeek}
+              assignments={assignments}
+              startDate={startDate}
+            />
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
+
+export default RecommendationView;

@@ -1,39 +1,31 @@
 /**
- * PlannerView.tsx
- * Custom planner with workshop creation modal and staff assignment
- * Layout matches Recommendation view with additional workshop creation capability
+ * PlannerView Component
+ * Custom planner - replicate RecommendationView with workshop creation capability
+ * Users can create custom workshops from lessons via modal
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import type { Programme, SegmentAssignment, Staff as StaffType, Weekday, Segment } from '../types';
-import { buildMockProgramme } from '../mock/mockProgramme';
-import { mockStaff } from '../mock/mockStaff';
-import { isStaffAvailableForProgramme } from '../utils/dateMap';
+import { useNavigate } from 'react-router-dom';
+import type { Cohort, Programme, SegmentAssignment, Staff as StaffType, Segment, Weekday } from '../types';
 import { UpdatedStaffListPanel } from './UpdatedStaffListPanel';
 import { CreateWorkshopModal } from './CreateWorkshopModal';
+import { buildMockProgramme, TIME_SLOTS } from '../mock/mockProgramme';
+import { mockStaff } from '../mock/mockStaff';
+import { generateDateMapping, toISO, isStaffAvailableForProgramme } from '../utils/dateMap';
 import styles from './SchedulerScreen.module.css';
-import gridStyles from './PlannerGrid.module.css';
 
-// Helper function to get default Monday date
-const getDefaultMonday = (): string => {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
-  const monday = new Date(today);
-  monday.setDate(monday.getDate() + daysToMonday);
-  const year = monday.getFullYear();
-  const month = String(monday.getMonth() + 1).padStart(2, '0');
-  const day = String(monday.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+interface PlannerViewProps {
+  cohort: Cohort;
+}
 
+// Extended segment with lesson metadata for created workshops
 interface CustomSegment extends Segment {
   lessonId?: string;
   lessonName?: string;
 }
 
 interface CustomDayPlan {
-  day: string;
+  day: Weekday;
   segments: CustomSegment[];
 }
 
@@ -42,10 +34,17 @@ interface CustomProgrammeWeek {
   days: CustomDayPlan[];
 }
 
-export const PlannerView: React.FC = () => {
-  // Initialize custom programme with base structure
+export const PlannerView: React.FC<PlannerViewProps> = ({ cohort }) => {
+  const navigate = useNavigate();
+  const [startDate, setStartDate] = useState<string>('');
+  const [errors, setErrors] = useState<string[]>([]);
+  const [mondayWarning, setMondayWarning] = useState(false);
+  const [assignments, setAssignments] = useState<SegmentAssignment[]>([]);
+  const [currentWeek, setCurrentWeek] = useState(1);
+
+  // Custom programme state - tracks user-created workshops with lesson assignments
   const baseProgramme: Programme = buildMockProgramme();
-  const [customProgramme, setCustomProgramme] = useState<CustomProgrammeWeek[]>(
+  const [customProgramme, setCustomProgramme] = useState<CustomProgrammeWeek[]>(() =>
     baseProgramme.map((week) => ({
       week: week.week,
       days: week.days.map((day) => ({
@@ -55,18 +54,11 @@ export const PlannerView: React.FC = () => {
     }))
   );
 
-  // State management - initialize with default Monday
-  const defaultDate = getDefaultMonday();
-  const [startDate, setStartDate] = useState<string>(defaultDate);
-  const [mondayWarning, setMondayWarning] = useState(false);
-  const [assignments, setAssignments] = useState<SegmentAssignment[]>([]);
-  const [currentWeek, setCurrentWeek] = useState(1);
-
-  // Modal state for workshop creation
+  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{
     week: number;
-    day: string;
+    day: Weekday;
     segmentId: string;
   } | null>(null);
 
@@ -91,15 +83,17 @@ export const PlannerView: React.FC = () => {
     return staff.filter((s) => isStaffAvailableForProgramme(s.availabilityPeriod?.startDateISO, startDate));
   }, [staff, startDate]);
 
-  // Handle drop - assign staff to a workshop segment
+  // Handle drop - assign staff to a segment (including custom workshops)
   const handleDrop = useCallback(
     (segmentId: string, week: number, day: string, staffId: string) => {
+      // Check if staff already assigned to this segment
       const existingAssignment = assignments.find(
-        (a) => a.segmentId === segmentId && a.week === week && a.day === (day as Weekday)
+        (a) => a.segmentId === segmentId && a.week === week && a.day === (day as any)
       );
 
       if (existingAssignment) {
         if (existingAssignment.staffIds.includes(staffId)) {
+          // Remove staff from this segment
           const updated = {
             ...existingAssignment,
             staffIds: existingAssignment.staffIds.filter((id) => id !== staffId),
@@ -110,6 +104,7 @@ export const PlannerView: React.FC = () => {
             setAssignments(assignments.map((a) => (a === existingAssignment ? updated : a)));
           }
         } else {
+          // Add staff to this segment
           setAssignments(
             assignments.map((a) =>
               a === existingAssignment
@@ -119,12 +114,13 @@ export const PlannerView: React.FC = () => {
           );
         }
       } else {
+        // Create new assignment
         setAssignments([
           ...assignments,
           {
             segmentId,
             week,
-            day: day as Weekday,
+            day: day as any,
             staffIds: [staffId],
           },
         ]);
@@ -133,16 +129,18 @@ export const PlannerView: React.FC = () => {
     [assignments]
   );
 
-  // Get disabled staff for current week
+  // Get disabled staff for current week (those with 4+ workshops)
   const disabledStaffIds = new Set<string>();
   assignments
     .filter((a) => a.week === currentWeek)
     .forEach((a) => {
-      a.staffIds.forEach((id) => {
-        const count = assignments.filter(
-          (a2) => a2.week === currentWeek && a2.staffIds.includes(id)
-        ).length;
-        if (count >= 4) disabledStaffIds.add(id);
+      a.staffIds.forEach((staffId) => {
+        const count = assignments
+          .filter((assign) => assign.week === currentWeek && assign.staffIds.includes(staffId))
+          .length;
+        if (count >= 4) {
+          disabledStaffIds.add(staffId);
+        }
       });
     });
 
@@ -155,7 +153,8 @@ export const PlannerView: React.FC = () => {
       const allWorkshops: string[] = [];
       weekProgramme.days.forEach((day) => {
         day.segments.forEach((seg) => {
-          if (seg.category === 'Workshop' && seg.lessonId) {
+          // Count all non-Break segments (including custom workshops)
+          if (seg.category !== 'Break') {
             allWorkshops.push(seg.id);
           }
         });
@@ -175,12 +174,77 @@ export const PlannerView: React.FC = () => {
     [customProgramme, assignments]
   );
 
-  // Handle workshop creation from modal
-  const handleAddWorkshop = (week: number, day: string, segmentId: string) => {
+  // Auto-assign staff to workshops
+  const handleAutoAssign = useCallback(() => {
+    if (!startDate) {
+      setErrors(['Please select a start date first']);
+      return;
+    }
+
+    const newAssignments = [...assignments];
+    const staffWorkshopCount = new Map<string, number>();
+
+    // Initialize workshop count
+    availableStaff.forEach((s) => staffWorkshopCount.set(s.id, 0));
+
+    // Get all workshops for current week (non-Break segments)
+    const weekProgramme = customProgramme[currentWeek - 1];
+    if (!weekProgramme) return;
+
+    const workshopsToAssign: Array<{ segmentId: string; day: any }> = [];
+    weekProgramme.days.forEach((day) => {
+      day.segments.forEach((seg) => {
+        if (seg.category !== 'Break') {
+          workshopsToAssign.push({ segmentId: seg.id, day: day.day });
+        }
+      });
+    });
+
+    // Assign staff to workshops (one per workshop, max 4 per staff)
+    for (const workshop of workshopsToAssign) {
+      // Find first available staff (not yet at 4 workshops)
+      const assignableStaff = availableStaff.find((s) => {
+        const count = staffWorkshopCount.get(s.id) || 0;
+        // Check if already assigned to this workshop
+        const alreadyAssigned = newAssignments.some(
+          (a) => a.segmentId === workshop.segmentId && a.staffIds.includes(s.id)
+        );
+        return count < 4 && !alreadyAssigned;
+      });
+
+      if (assignableStaff) {
+        // Check if assignment already exists
+        const existing = newAssignments.find(
+          (a) => a.segmentId === workshop.segmentId && a.week === currentWeek && a.day === workshop.day
+        );
+
+        if (existing) {
+          if (!existing.staffIds.includes(assignableStaff.id)) {
+            existing.staffIds.push(assignableStaff.id);
+            staffWorkshopCount.set(assignableStaff.id, (staffWorkshopCount.get(assignableStaff.id) || 0) + 1);
+          }
+        } else {
+          newAssignments.push({
+            segmentId: workshop.segmentId,
+            week: currentWeek,
+            day: workshop.day,
+            staffIds: [assignableStaff.id],
+          });
+          staffWorkshopCount.set(assignableStaff.id, (staffWorkshopCount.get(assignableStaff.id) || 0) + 1);
+        }
+      }
+    }
+
+    setAssignments(newAssignments);
+  }, [startDate, customProgramme, currentWeek, assignments, availableStaff]);
+
+  // Open modal to create a workshop
+  const handleAddWorkshop = (week: number, day: Weekday, segmentId: string) => {
     setSelectedSlot({ week, day, segmentId });
     setModalOpen(true);
   };
 
+  // Create a workshop when modal is submitted
   const handleCreateWorkshop = (
     lessonId: string,
     lessonName: string,
@@ -188,8 +252,8 @@ export const PlannerView: React.FC = () => {
   ) => {
     if (!selectedSlot) return;
 
-    setCustomProgramme((prev) => {
-      return prev.map((week) => {
+    setCustomProgramme((prev) =>
+      prev.map((week) => {
         if (week.week !== selectedSlot.week) return week;
 
         return {
@@ -206,7 +270,6 @@ export const PlannerView: React.FC = () => {
                     title: workshopName,
                     lessonId,
                     lessonName,
-                    category: 'Workshop' as const,
                   };
                 }
                 return segment;
@@ -214,16 +277,17 @@ export const PlannerView: React.FC = () => {
             };
           }),
         };
-      });
-    });
+      })
+    );
 
     setModalOpen(false);
     setSelectedSlot(null);
   };
 
-  const handleDeleteWorkshop = (week: number, day: string, segmentId: string) => {
-    setCustomProgramme((prev) => {
-      return prev.map((w) => {
+  // Delete a workshop (revert to blank)
+  const handleDeleteWorkshop = (week: number, day: Weekday, segmentId: string) => {
+    setCustomProgramme((prev) =>
+      prev.map((w) => {
         if (w.week !== week) return w;
 
         return {
@@ -234,7 +298,7 @@ export const PlannerView: React.FC = () => {
             return {
               ...d,
               segments: d.segments.map((seg) => {
-                if (seg.id === segmentId && seg.category === 'Workshop' && seg.lessonId) {
+                if (seg.id === segmentId && seg.lessonId) {
                   return {
                     ...seg,
                     title: 'Workshop',
@@ -247,31 +311,59 @@ export const PlannerView: React.FC = () => {
             };
           }),
         };
-      });
-    });
+      })
+    );
   };
 
-  const getStaffName = (staffId: string): string => {
-    return staff.find((s) => s.id === staffId)?.name || 'Unknown';
+  const handleSave = () => {
+    const newErrors: string[] = [];
+
+    if (!startDate) {
+      newErrors.push('Start date is required.');
+    }
+
+    if (assignments.length === 0) {
+      newErrors.push('Please assign staff to at least one workshop.');
+    }
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // TODO: Send to backend
+    console.log('Schedule payload:', {
+      cohortId: cohort.cohortId,
+      startDateISO: toISO(new Date(startDate)),
+      assignments,
+      customProgramme,
+      dateMapping: generateDateMapping(new Date(startDate) as any),
+    });
+
+    setErrors([]);
+    // Navigate back to scheduler page
+    navigate('/scheduler');
+  };
+
+  const handleCancel = () => {
+    if (
+      assignments.length > 0 &&
+      !window.confirm('You have unsaved assignments. Are you sure?')
+    ) {
+      return;
+    }
+    navigate('/scheduler');
   };
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>Planner View</h1>
-          <p className={styles.subtitle}>
-            Create custom workshops and assign staff to your 10-week programme
-          </p>
-        </div>
-      </header>
-
+    <>
       <div className={styles.mainContent}>
-        {/* Sidebar */}
+        {/* Sidebar - Controls & Info */}
         <aside className={styles.sidebar}>
           <div className={styles.sidebarSection}>
             <h2 className={styles.sectionTitle}>Programme Setup</h2>
 
+            {/* Date Picker */}
             <div className={styles.formGroup}>
               <label htmlFor="startDate" className={styles.label}>
                 Start Date (Monday)
@@ -287,10 +379,76 @@ export const PlannerView: React.FC = () => {
                 <p className={styles.warning}>⚠️ Selected date is not a Monday</p>
               )}
             </div>
+
+            {/* Cohort Info */}
+            <div className={styles.cohortInfo}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Cohort:</span>
+                <span className={styles.infoValue}>{cohort.cohortCode}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Academy:</span>
+                <span className={styles.infoValue}>{cohort.academyId}</span>
+              </div>
+            </div>
+
+            {/* Auto Assign Button */}
+            <button
+              onClick={handleAutoAssign}
+              disabled={!startDate || availableStaff.length === 0}
+              className={styles.autoAssignButton}
+              title={!startDate ? 'Select a date first' : 'Auto assign staff to workshops'}
+            >
+              Auto Assign Staff
+            </button>
+          </div>
+
+          {/* Errors */}
+          {errors.length > 0 && (
+            <div className={styles.errorSection}>
+              <h3 className={styles.errorTitle}>Issues</h3>
+              <ul className={styles.errorList}>
+                {errors.map((err, idx) => (
+                  <li key={idx} className={styles.errorItem}>
+                    {err}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className={styles.summary}>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Assignments:</span>
+              <span className={styles.summaryValue}>{assignments.length}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Available Staff:</span>
+              <span className={styles.summaryValue}>{availableStaff.length}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Current Week:</span>
+              <span className={styles.summaryValue}>{currentWeek}/10</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.actions}>
+            <button
+              onClick={handleSave}
+              className={styles.saveButton}
+              disabled={!startDate || assignments.length === 0}
+            >
+              Save Schedule
+            </button>
+            <button onClick={handleCancel} className={styles.cancelButton}>
+              Cancel
+            </button>
           </div>
         </aside>
 
-        {/* Main Area */}
+        {/* Main Grid Area */}
         <main className={styles.mainArea}>
           {/* Week Selector */}
           <div className={styles.weekSelector}>
@@ -303,7 +461,7 @@ export const PlannerView: React.FC = () => {
             </button>
 
             <div className={styles.weekDisplay}>
-              {Array.from({ length: customProgramme.length }, (_, i) => i + 1).map((week) => {
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((week) => {
                 const isComplete = isWeekComplete(week);
                 return (
                   <button
@@ -322,131 +480,33 @@ export const PlannerView: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setCurrentWeek(Math.min(customProgramme.length, currentWeek + 1))}
-              disabled={currentWeek === customProgramme.length}
+              onClick={() => setCurrentWeek(Math.min(10, currentWeek + 1))}
+              disabled={currentWeek === 10}
               className={styles.weekNavButton}
             >
               Next →
             </button>
           </div>
 
-          {/* Week Content */}
+          {/* Current Week Grid + Staff Panel */}
           <div className={styles.weekContent}>
-            {/* Custom Workshop Grid */}
+            {/* Custom Grid with Workshop Creation */}
             <div className={styles.gridArea}>
               {customProgramme[currentWeek - 1] && (
-                <div className={gridStyles.gridWrapper}>
-                  <table className={gridStyles.workshopGrid}>
-                    <thead>
-                      <tr>
-                        <th className={gridStyles.timeHeader}>Time</th>
-                        {customProgramme[currentWeek - 1]!.days.map((day) => (
-                          <th key={day.day}>{day.day}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {customProgramme[currentWeek - 1]!.days[0]?.segments.map((_, segIdx) => (
-                        <tr key={segIdx}>
-                          <td className={gridStyles.timeLabel}>
-                            <span className={gridStyles.segment}>Segment {segIdx + 1}</span>
-                          </td>
-                          {customProgramme[currentWeek - 1]!.days.map((day) => {
-                            const segment = day.segments[segIdx];
-                            if (!segment) return <td key={day.day} />;
-
-                            return (
-                              <td key={`${day.day}-${segment.id}`} className={gridStyles.workshopCell}>
-                                {segment.category === 'Break' ? (
-                                  <div className={gridStyles.breakSegment}>
-                                    <span>{segment.title}</span>
-                                    <span className={gridStyles.duration}>({segment.durationMinutes}m)</span>
-                                  </div>
-                                ) : segment.lessonId ? (
-                                  <div
-                                    className={gridStyles.workshopBox}
-                                    draggable
-                                    onDragStart={(e) => {
-                                      e.dataTransfer.effectAllowed = 'move';
-                                      e.dataTransfer.setData(
-                                        'application/json',
-                                        JSON.stringify({
-                                          type: 'workshop',
-                                          segmentId: segment.id,
-                                          week: currentWeek,
-                                          day: day.day,
-                                        })
-                                      );
-                                    }}
-                                    onDragOver={(e) => {
-                                      e.preventDefault();
-                                      e.dataTransfer.dropEffect = 'copy';
-                                    }}
-                                    onDrop={(e) => {
-                                      e.preventDefault();
-                                      try {
-                                        const data = JSON.parse(e.dataTransfer.getData('application/json'));
-                                        if (data.type === 'staff') {
-                                          handleDrop(segment.id, currentWeek, day.day, data.staffId);
-                                        }
-                                      } catch {
-                                        console.error('Drop error:', e);
-                                      }
-                                    }}
-                                  >
-                                    <div className={gridStyles.workshopContent}>
-                                      <span className={gridStyles.workshopTitle}>{segment.title}</span>
-                                      <span className={gridStyles.lessonBadge}>{segment.lessonName}</span>
-                                    </div>
-                                    <button
-                                      className={gridStyles.deleteBtn}
-                                      onClick={() =>
-                                        handleDeleteWorkshop(currentWeek, day.day, segment.id)
-                                      }
-                                      aria-label="Delete workshop"
-                                      title="Delete"
-                                    >
-                                      ×
-                                    </button>
-                                    {/* Staff assigned to this workshop */}
-                                    <div className={gridStyles.staffBadges}>
-                                      {assignments
-                                        .filter(
-                                          (a) =>
-                                            a.segmentId === segment.id &&
-                                            a.week === currentWeek &&
-                                            a.day === day.day
-                                        )
-                                        .flatMap((a) => a.staffIds)
-                                        .map((staffId) => (
-                                          <span key={staffId} className={gridStyles.staffTag}>
-                                            {getStaffName(staffId)}
-                                          </span>
-                                        ))}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <button
-                                    className={gridStyles.createBtn}
-                                    onClick={() =>
-                                      handleAddWorkshop(currentWeek, day.day, segment.id)
-                                    }
-                                  >
-                                    Create Workshop
-                                  </button>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <PlannerGrid
+                  weekNumber={currentWeek}
+                  days={customProgramme[currentWeek - 1]!.days}
+                  assignments={assignments}
+                  staff={availableStaff}
+                  onDrop={handleDrop}
+                  onAddWorkshop={handleAddWorkshop}
+                  onDeleteWorkshop={handleDeleteWorkshop}
+                  disabledStaffIds={disabledStaffIds}
+                />
               )}
             </div>
 
-            {/* Staff Panel - Drag Source */}
+            {/* Staff Panel */}
             <div className={styles.staffArea}>
               <UpdatedStaffListPanel
                 staff={availableStaff}
@@ -472,6 +532,176 @@ export const PlannerView: React.FC = () => {
           day={selectedSlot.day}
         />
       )}
+    </>
+  );
+};
+
+// Custom grid component for Planner with workshop creation buttons
+interface PlannerGridProps {
+  weekNumber: number;
+  days: CustomDayPlan[];
+  assignments: SegmentAssignment[];
+  staff: StaffType[];
+  onDrop: (segmentId: string, weekNumber: number, day: string, staffId: string) => void;
+  onAddWorkshop: (week: number, day: Weekday, segmentId: string) => void;
+  onDeleteWorkshop: (week: number, day: Weekday, segmentId: string) => void;
+  disabledStaffIds?: Set<string>;
+}
+
+const PlannerGrid: React.FC<PlannerGridProps> = ({
+  weekNumber,
+  days,
+  assignments,
+  staff,
+  onDrop,
+  onAddWorkshop,
+  onDeleteWorkshop,
+}) => {
+  const [dragOverCell, setDragOverCell] = useState<string | null>(null);
+
+  // Build assignment map for this week
+  const assignmentMap = new Map<string, string[]>();
+  assignments
+    .filter((a) => a.week === weekNumber)
+    .forEach((a) => {
+      assignmentMap.set(a.segmentId, a.staffIds);
+    });
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, cellId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setDragOverCell(cellId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCell(null);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, segment: CustomSegment, day: Weekday) => {
+    e.preventDefault();
+    setDragOverCell(null);
+
+    if (segment.category === 'Break') return; // Can't assign staff to breaks
+
+    try {
+      const staffData = e.dataTransfer.getData('application/json');
+      if (!staffData) return;
+
+      const staffMember = JSON.parse(staffData);
+      onDrop(segment.id, weekNumber, day, staffMember.id);
+    } catch (error) {
+      console.error('Drop error:', error);
+    }
+  };
+
+  const getStaffName = (staffId: string): string => {
+    return staff.find((s) => s.id === staffId)?.name || 'Unknown';
+  };
+
+  const WEEKDAYS: Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
+  return (
+    <div className={styles.weekContainer}>
+      <h3 className={styles.weekTitle}>Week {weekNumber}</h3>
+
+      <div className={styles.gridWrapper}>
+        <table className={styles.timeGrid} role="table" aria-label={`Week ${weekNumber} schedule`}>
+          <thead>
+            <tr>
+              <th className={styles.timeHeader}>Time</th>
+              {WEEKDAYS.map((day) => (
+                <th key={`day-${day}`} className={styles.dayHeader}>
+                  {day}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {TIME_SLOTS.map((slot: any) => (
+              <tr key={`slot-${slot.id}`} className={styles.timeRow}>
+                <td className={styles.timeCell}>
+                  <div className={styles.timeLabel}>
+                    {slot.startTime} - {slot.endTime}
+                  </div>
+                  <div className={styles.timeDuration}>{slot.durationMinutes}m</div>
+                </td>
+
+                {WEEKDAYS.map((day) => {
+                  const dayPlan = days.find((d) => d.day === day);
+                  const segment = dayPlan?.segments.find((s) => s.timeSlotId === slot.id);
+                  const cellId = `${weekNumber}-${day}-${slot.id}`;
+                  const isBreak = segment?.category === 'Break';
+                  const assignedStaffIds = segment ? assignmentMap.get(segment.id) || [] : [];
+                  const isWorkshopWithLesson = segment && segment.category === 'Workshop' && segment.lessonId;
+                  const isEmptyWorkshop = segment && segment.category === 'Workshop' && !segment.lessonId;
+
+                  return (
+                    <td key={`${day}-${slot.id}`} className={styles.contentCell}>
+                      {isBreak ? (
+                        <div className={styles.breakCell}>
+                          <div className={styles.breakLabel}>Break</div>
+                          <div className={styles.breakDuration}>{segment.durationMinutes}m</div>
+                        </div>
+                      ) : isWorkshopWithLesson ? (
+                        <div
+                          className={`${styles.workshop} ${dragOverCell === cellId ? styles.dragOver : ''}`}
+                          onDragOver={(e) => handleDragOver(e, cellId)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, segment, day)}
+                          role="region"
+                          aria-label={`${segment.title}, ${segment.durationMinutes} minutes`}
+                        >
+                          <div className={styles.workshopHeader}>
+                            <div className={styles.workshopTitle}>{segment.title}</div>
+                            <span className={`${styles.category} ${styles[`cat-${segment.category}`]}`}>
+                              {segment.lessonName}
+                            </span>
+                          </div>
+
+                          {/* Delete button for custom workshops */}
+                          <button
+                            onClick={() => onDeleteWorkshop(weekNumber, day, segment.id)}
+                            className={styles.deleteWorkshopBtn}
+                            title="Delete workshop"
+                            aria-label="Delete workshop"
+                          >
+                            ×
+                          </button>
+
+                          {/* Assigned Staff Display */}
+                          {assignedStaffIds.length > 0 && (
+                            <div className={styles.assignedStaff}>
+                              {assignedStaffIds.map((staffId) => (
+                                <div key={staffId} className={styles.staffBadge}>
+                                  {getStaffName(staffId)}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Drop hint */}
+                          {assignedStaffIds.length === 0 && (
+                            <div className={styles.dropHint}>Drag staff here</div>
+                          )}
+                        </div>
+                      ) : isEmptyWorkshop ? (
+                        <button
+                          className={styles.createWorkshopBtn}
+                          onClick={() => onAddWorkshop(weekNumber, day, segment.id)}
+                        >
+                          + Create Workshop
+                        </button>
+                      ) : null}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
+
+export default PlannerView;

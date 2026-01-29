@@ -13,6 +13,7 @@ import { buildMockProgramme, TIME_SLOTS } from '../mock/mockProgramme';
 import { mockStaff } from '../mock/mockStaff';
 import { generateDateMapping, toISO, isStaffAvailableForProgramme } from '../utils/dateMap';
 import styles from './SchedulerScreen.module.css';
+import timeGridStyles from './TimeGrid.module.css';
 
 interface PlannerViewProps {
   cohort: Cohort;
@@ -601,16 +602,16 @@ const PlannerGrid: React.FC<PlannerGridProps> = ({
   const WEEKDAYS: Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
   return (
-    <div className={styles.weekContainer}>
-      <h3 className={styles.weekTitle}>Week {weekNumber}</h3>
+    <div className={timeGridStyles.weekContainer}>
+      <h3 className={timeGridStyles.weekTitle}>Week {weekNumber}</h3>
 
-      <div className={styles.gridWrapper}>
-        <table className={styles.timeGrid} role="table" aria-label={`Week ${weekNumber} schedule`}>
+      <div className={timeGridStyles.gridWrapper}>
+        <table className={timeGridStyles.timeGrid} role="table" aria-label={`Week ${weekNumber} schedule`}>
           <thead>
             <tr>
-              <th className={styles.timeHeader}>Time</th>
+              <th className={timeGridStyles.timeHeader}>Time</th>
               {WEEKDAYS.map((day) => (
-                <th key={`day-${day}`} className={styles.dayHeader}>
+                <th key={`day-${day}`} className={timeGridStyles.dayHeader}>
                   {day}
                 </th>
               ))}
@@ -618,12 +619,12 @@ const PlannerGrid: React.FC<PlannerGridProps> = ({
           </thead>
           <tbody>
             {TIME_SLOTS.map((slot: any) => (
-              <tr key={`slot-${slot.id}`} className={styles.timeRow}>
-                <td className={styles.timeCell}>
-                  <div className={styles.timeLabel}>
+              <tr key={`slot-${slot.id}`} className={timeGridStyles.timeRow}>
+                <td className={timeGridStyles.timeCell}>
+                  <div className={timeGridStyles.timeLabel}>
                     {slot.startTime} - {slot.endTime}
                   </div>
-                  <div className={styles.timeDuration}>{slot.durationMinutes}m</div>
+                  <div className={timeGridStyles.timeDuration}>{slot.durationMinutes}m</div>
                 </td>
 
                 {WEEKDAYS.map((day) => {
@@ -636,24 +637,24 @@ const PlannerGrid: React.FC<PlannerGridProps> = ({
                   const isEmptyWorkshop = segment && segment.category === 'Workshop' && !segment.lessonId;
 
                   return (
-                    <td key={`${day}-${slot.id}`} className={styles.contentCell}>
+                    <td key={`${day}-${slot.id}`} className={timeGridStyles.contentCell}>
                       {isBreak ? (
-                        <div className={styles.breakCell}>
-                          <div className={styles.breakLabel}>Break</div>
-                          <div className={styles.breakDuration}>{segment.durationMinutes}m</div>
+                        <div className={timeGridStyles.breakCell}>
+                          <div className={timeGridStyles.breakLabel}>Break</div>
+                          <div className={timeGridStyles.breakDuration}>{segment.durationMinutes}m</div>
                         </div>
                       ) : isWorkshopWithLesson ? (
                         <div
-                          className={`${styles.workshop} ${dragOverCell === cellId ? styles.dragOver : ''}`}
+                          className={`${timeGridStyles.workshop} ${dragOverCell === cellId ? timeGridStyles.dragOver : ''}`}
                           onDragOver={(e) => handleDragOver(e, cellId)}
                           onDragLeave={handleDragLeave}
                           onDrop={(e) => handleDrop(e, segment, day)}
                           role="region"
                           aria-label={`${segment.title}, ${segment.durationMinutes} minutes`}
                         >
-                          <div className={styles.workshopHeader}>
-                            <div className={styles.workshopTitle}>{segment.title}</div>
-                            <span className={`${styles.category} ${styles[`cat-${segment.category}`]}`}>
+                          <div className={timeGridStyles.workshopHeader}>
+                            <div className={timeGridStyles.workshopTitle}>{segment.title}</div>
+                            <span className={`${timeGridStyles.category} ${timeGridStyles.catWorkshop}`}>
                               {segment.lessonName}
                             </span>
                           </div>
@@ -670,9 +671,9 @@ const PlannerGrid: React.FC<PlannerGridProps> = ({
 
                           {/* Assigned Staff Display */}
                           {assignedStaffIds.length > 0 && (
-                            <div className={styles.assignedStaff}>
+                            <div className={timeGridStyles.assignedStaff}>
                               {assignedStaffIds.map((staffId) => (
-                                <div key={staffId} className={styles.staffBadge}>
+                                <div key={staffId} className={timeGridStyles.staffBadge}>
                                   {getStaffName(staffId)}
                                 </div>
                               ))}
@@ -681,7 +682,7 @@ const PlannerGrid: React.FC<PlannerGridProps> = ({
 
                           {/* Drop hint */}
                           {assignedStaffIds.length === 0 && (
-                            <div className={styles.dropHint}>Drag staff here</div>
+                            <div className={timeGridStyles.dropHint}>Drag staff here</div>
                           )}
                         </div>
                       ) : isEmptyWorkshop ? (

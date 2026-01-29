@@ -18,16 +18,6 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
 
   return (
     <div className={styles.screenContainer}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>Schedule: {cohort.cohortCode}</h1>
-          <p className={styles.subtitle}>
-            Create custom workshops and assign staff to your 10-week programme
-          </p>
-        </div>
-      </header>
-
       {/* Horizontal Tab Navigation */}
       <nav className={styles.tabNav}>
         <button

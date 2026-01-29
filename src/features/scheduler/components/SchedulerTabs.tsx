@@ -6,17 +6,15 @@
 import React, { useState } from 'react';
 import styles from './SchedulerTabs.module.css';
 
-import type { Cohort } from '../types';
+
 import { PlannerView } from './PlannerView';
 import { RecommendationView } from './RecommendationView';
 
 type TabType = 'planner' | 'recommendation';
 
-interface SchedulerTabsProps {
-  cohort: Cohort;
-}
+interface SchedulerTabsProps {}
 
-export const SchedulerTabs: React.FC<SchedulerTabsProps> = ({ cohort }) => {
+export const SchedulerTabs: React.FC<SchedulerTabsProps> = () => {
   const [activeTab, setActiveTab] = useState<TabType>('planner');
 
   return (
@@ -54,7 +52,7 @@ export const SchedulerTabs: React.FC<SchedulerTabsProps> = ({ cohort }) => {
           role="tabpanel"
           aria-labelledby="planner-tab"
         >
-          <PlannerView cohort={cohort} />
+          <PlannerView />
         </div>
 
         {/* Recommendation Tab */}
@@ -64,7 +62,7 @@ export const SchedulerTabs: React.FC<SchedulerTabsProps> = ({ cohort }) => {
           role="tabpanel"
           aria-labelledby="recommendation-tab"
         >
-          <RecommendationView cohort={cohort} />
+          <RecommendationView />
         </div>
       </div>
     </div>

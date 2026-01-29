@@ -365,6 +365,207 @@
   border-radius: 8px;
 }
 
+/* Workshop Grid Styles */
+.gridWrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  min-width: 100%;
+}
+
+.grid thead {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.grid th {
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.timeHeader {
+  min-width: 80px;
+  text-align: left;
+}
+
+.grid tbody tr {
+  border-top: 1px solid #e0e0e0;
+}
+
+.timeLabel {
+  padding: 1rem;
+  font-weight: 600;
+  color: #666;
+  background: #fafafa;
+  min-width: 80px;
+  text-align: center;
+  border-right: 1px solid #e0e0e0;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.cellContent {
+  padding: 0.5rem;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  min-width: 120px;
+  height: 80px;
+}
+
+/* Break Segment */
+.breakSegment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.75rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #92400e;
+  font-weight: 500;
+  height: 100%;
+}
+
+.duration {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+/* Create Workshop Button */
+.createBtn {
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  border: 2px dashed #0284c7;
+  background: #f0f9ff;
+  color: #0284c7;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.createBtn:hover {
+  background: #e0f2fe;
+  border-color: #0369a1;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+  transform: scale(1.02);
+}
+
+.createBtn:active {
+  transform: scale(0.98);
+}
+
+.createBtn:focus {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+}
+
+/* Workshop Segment */
+.workshopSegment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #e0f2fe;
+  border: 1px solid #0284c7;
+  border-radius: 4px;
+  cursor: move;
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.workshopSegment:hover {
+  background: #bae6fd;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+}
+
+.workshopSegment[dragging] {
+  opacity: 0.6;
+}
+
+.workshopContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.workshopTitle {
+  font-weight: 600;
+  color: #0c4a6e;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lessonBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  color: #0284c7;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Delete Button */
+.deleteBtn {
+  padding: 0.25rem 0.5rem;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteBtn:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.deleteBtn:active {
+  transform: scale(0.95);
+}
+
 /* Responsive Design */
 @media (max-width: 1400px) {
   .mainContent {

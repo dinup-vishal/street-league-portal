@@ -27,7 +27,7 @@ export const SchedulerScreen: React.FC<SchedulerScreenProps> = ({ cohort }) => {
       </header>
 
       {/* Tab Navigation & Content */}
-      <SchedulerTabs cohort={cohort} />
+      <SchedulerTabs />
     </div>
   );
 };

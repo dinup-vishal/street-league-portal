@@ -216,7 +216,6 @@ export const LessonPlansForm: React.FC = () => {
               value={formState.selectedProduct || ''}
               onChange={handleProductChange}
               className={styles.select}
-              disabled={formState.mappings.length > 0 && !formState.selectedProduct}
             >
               <option value="">-- Select a Product --</option>
               {MOCK_PRODUCTS.map((product) => (

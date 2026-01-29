@@ -1,64 +1,55 @@
 /**
  * Mock Programme Data
  * 10-week curriculum with Mon-Thu delivery
+ * Fixed time slots across all weeks:
+ * - 10:00-12:00: Morning Workshop (120 min)
+ * - 12:00-12:15: Break (15 min)
+ * - 12:15-13:15: Afternoon Workshop (60 min)
  */
 
-import type { Programme, DayPlan, Segment } from '../types';
+import type { Programme, DayPlan, Segment, TimeSlot } from '../types';
+
+// Fixed time slots used across all weeks
+export const TIME_SLOTS: TimeSlot[] = [
+  { id: 'slot-morning', startTime: '10:00', endTime: '12:00', durationMinutes: 120 },
+  { id: 'slot-break', startTime: '12:00', endTime: '12:15', durationMinutes: 15 },
+  { id: 'slot-afternoon', startTime: '12:15', endTime: '13:15', durationMinutes: 60 },
+];
 
 const MONDAY_SEGMENTS: Segment[] = [
-  { id: 'mon-ws1', title: 'Workshop 1', durationMinutes: 90, category: 'Workshop' },
-  { id: 'mon-brk', title: 'Break', durationMinutes: 15, category: 'Break' },
-  { id: 'mon-ws2', title: 'Workshop 2', durationMinutes: 60, category: 'Workshop' },
-  { id: 'mon-sport', title: 'Afternoon Sport', durationMinutes: 90, category: 'Sport' },
+  { id: 'mon-ws1', title: 'Workshop 1', durationMinutes: 120, category: 'Workshop', timeSlotId: 'slot-morning' },
+  { id: 'mon-brk', title: 'Break', durationMinutes: 15, category: 'Break', timeSlotId: 'slot-break' },
+  { id: 'mon-ws2', title: 'Workshop 2', durationMinutes: 60, category: 'Workshop', timeSlotId: 'slot-afternoon' },
 ];
 
 const TUESDAY_SEGMENTS: Segment[] = [
-  { id: 'tue-ws3', title: 'Workshop 3', durationMinutes: 45, category: 'Workshop' },
-  { id: 'tue-brk', title: 'Break', durationMinutes: 15, category: 'Break' },
-  { id: 'tue-out', title: 'Outdoor Session', durationMinutes: 120, category: 'Sport' },
+  { id: 'tue-ws1', title: 'Workshop 3', durationMinutes: 120, category: 'Workshop', timeSlotId: 'slot-morning' },
+  { id: 'tue-brk', title: 'Break', durationMinutes: 15, category: 'Break', timeSlotId: 'slot-break' },
+  { id: 'tue-ws2', title: 'Workshop 4', durationMinutes: 60, category: 'Workshop', timeSlotId: 'slot-afternoon' },
 ];
 
 const WEDNESDAY_SEGMENTS: Segment[] = [
-  { id: 'wed-qual', title: 'Qualification Unit 1', durationMinutes: 120, category: 'Qualification' },
-  { id: 'wed-brk', title: 'Break', durationMinutes: 15, category: 'Break' },
-  { id: 'wed-func', title: 'Functional Skills', durationMinutes: 90, category: 'Employability' },
+  { id: 'wed-ws1', title: 'Qualification Unit', durationMinutes: 120, category: 'Qualification', timeSlotId: 'slot-morning' },
+  { id: 'wed-brk', title: 'Break', durationMinutes: 15, category: 'Break', timeSlotId: 'slot-break' },
+  { id: 'wed-ws2', title: 'Functional Skills', durationMinutes: 60, category: 'Employability', timeSlotId: 'slot-afternoon' },
 ];
 
 const THURSDAY_SEGMENTS: Segment[] = [
-  { id: 'thu-emp', title: 'Employability Session', durationMinutes: 120, category: 'Employability' },
-  { id: 'thu-brk', title: 'Break', durationMinutes: 15, category: 'Break' },
-  { id: 'thu-team', title: 'Team Sport Session', durationMinutes: 90, category: 'Sport' },
+  { id: 'thu-ws1', title: 'Employability', durationMinutes: 120, category: 'Employability', timeSlotId: 'slot-morning' },
+  { id: 'thu-brk', title: 'Break', durationMinutes: 15, category: 'Break', timeSlotId: 'slot-break' },
+  { id: 'thu-ws2', title: 'Team Activity', durationMinutes: 60, category: 'Sport', timeSlotId: 'slot-afternoon' },
 ];
 
 export function buildMockProgramme(): Programme {
   const programme: Programme = [];
 
   for (let week = 1; week <= 10; week++) {
-    // Vary the segments slightly for weeks 6-10 (advanced modules)
-    const isAdvancedWeek = week > 5;
-
-    const mondaySegments = isAdvancedWeek
-      ? [
-          { id: `mon-adv${week}-1`, title: 'Advanced Workshop 1', durationMinutes: 90, category: 'Workshop' as const },
-          { id: `mon-adv${week}-brk`, title: 'Break', durationMinutes: 15, category: 'Break' as const },
-          { id: `mon-adv${week}-2`, title: 'Advanced Workshop 2', durationMinutes: 60, category: 'Workshop' as const },
-          { id: `mon-adv${week}-sport`, title: 'Afternoon Sport', durationMinutes: 90, category: 'Sport' as const },
-        ]
-      : MONDAY_SEGMENTS;
-
-    const tuesdaySegments = isAdvancedWeek
-      ? [
-          { id: `tue-adv${week}-1`, title: 'Advanced Module', durationMinutes: 45, category: 'Workshop' as const },
-          { id: `tue-adv${week}-brk`, title: 'Break', durationMinutes: 15, category: 'Break' as const },
-          { id: `tue-adv${week}-out`, title: 'Outdoor Experience', durationMinutes: 120, category: 'Sport' as const },
-        ]
-      : TUESDAY_SEGMENTS;
-
+    // Use same segments for all weeks (consistent structure)
     programme.push({
       week,
       days: [
-        { day: 'Monday', segments: mondaySegments },
-        { day: 'Tuesday', segments: tuesdaySegments },
+        { day: 'Monday', segments: MONDAY_SEGMENTS },
+        { day: 'Tuesday', segments: TUESDAY_SEGMENTS },
         { day: 'Wednesday', segments: WEDNESDAY_SEGMENTS },
         { day: 'Thursday', segments: THURSDAY_SEGMENTS },
       ],
@@ -74,3 +65,4 @@ export const mockProgrammeWeek1: DayPlan[] = [
   { day: 'Wednesday', segments: WEDNESDAY_SEGMENTS },
   { day: 'Thursday', segments: THURSDAY_SEGMENTS },
 ];
+

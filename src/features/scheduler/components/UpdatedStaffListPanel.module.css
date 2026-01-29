@@ -1,0 +1,246 @@
+.panelContainer {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #007bff;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.weekLabel {
+  background: #007bff;
+  color: #ffffff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Role Section */
+.roleSection {
+  margin-bottom: 1.5rem;
+}
+
+.roleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.roleName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.roleStats {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.badge {
+  background: transparent;
+  color: #666;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #ddd;
+}
+
+.badge.hasBadge {
+  background: #e7f3ff;
+  color: #0056b3;
+  border-color: #0056b3;
+}
+
+.badge.maxedBadge {
+  background: #fff3cd;
+  color: #997404;
+  border-color: #ff9800;
+}
+
+/* Staff Grid */
+.staffGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Staff Card */
+.staffCard {
+  background: #ffffff;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  padding: 0.75rem;
+  cursor: grab;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  position: relative;
+}
+
+.staffCard:hover:not(.disabled) {
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px);
+  border-color: #0056b3;
+}
+
+.staffCard.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8f9fa;
+  border-color: #ddd;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.staffName {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+  flex: 1;
+  word-break: break-word;
+}
+
+.workshopCount {
+  background: #e7f3ff;
+  color: #0056b3;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.workshopCount.countMax {
+  background: #fff3cd;
+  color: #997404;
+}
+
+/* Assigned Workshops */
+.assignedWorkshops {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.75rem;
+}
+
+.assignedLabel {
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.daysList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.dayBadge {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Disabled Message */
+.disabledMessage {
+  font-size: 0.7rem;
+  color: #ff6b6b;
+  font-weight: 600;
+  padding: 0.4rem;
+  background: #ffe0e0;
+  border-radius: 3px;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Availability */
+.availability {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #28a745;
+  font-weight: 500;
+  margin-top: auto;
+}
+
+.availabilityDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #28a745;
+  border-radius: 50%;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .staffGrid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .panelContainer {
+    padding: 1rem;
+  }
+
+  .staffGrid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .staffCard {
+    padding: 0.5rem;
+    min-height: 90px;
+  }
+
+  .staffName {
+    font-size: 0.8rem;
+  }
+
+  .workshopCount {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}

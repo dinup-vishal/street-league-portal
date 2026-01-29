@@ -94,7 +94,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({ cohort, onClose 
       const payload: SchedulePayload = {
         cohortId: cohort.cohortId,
         startDateISO: adjustedStart,
-        staffIds: [], // TODO: Collect from drag-and-drop assignments
+        assignments: [], // TODO: Collect from drag-and-drop assignments
         dateMapping: mapping,
       };
 

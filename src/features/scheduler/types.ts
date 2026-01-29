@@ -23,6 +23,17 @@ export interface Cohort {
 }
 
 /**
+ * TimeSlot: Represents a time period in the daily schedule (fixed across all weeks)
+ * e.g., "10:00-12:00" for morning workshop
+ */
+export interface TimeSlot {
+  id: string;
+  startTime: string; // "10:00"
+  endTime: string; // "12:00"
+  durationMinutes: number;
+}
+
+/**
  * Segment: A single activity/session within a delivery day
  * e.g., "Workshop 1", "Break", "Outdoor session"
  */
@@ -31,6 +42,7 @@ export interface Segment {
   title: string;
   durationMinutes: number;
   category: SegmentCategory;
+  timeSlotId?: string; // Reference to time slot for consistency across weeks
 }
 
 /**
@@ -70,6 +82,25 @@ export interface Staff {
 }
 
 /**
+ * Assignment: Staff allocation to a specific segment in a specific week
+ */
+export interface SegmentAssignment {
+  segmentId: string;
+  week: number;
+  day: Weekday;
+  staffIds: string[]; // Multiple staff can be assigned to one segment
+}
+
+/**
+ * StaffWeekAssignment: Tracks how many workshops a staff member is assigned in a week
+ */
+export interface StaffWeekAssignment {
+  staffId: string;
+  week: number;
+  workshopCount: number; // Incremented for Workshop category only
+}
+
+/**
  * Assignment: Staff allocation to a programme
  */
 export interface Assignment {
@@ -83,7 +114,7 @@ export interface Assignment {
 export interface SchedulePayload {
   cohortId: number;
   startDateISO: string;
-  staffIds: string[];
+  assignments: SegmentAssignment[]; // Per-segment staff assignments
   dateMapping: Array<{
     week: number;
     day: Weekday;

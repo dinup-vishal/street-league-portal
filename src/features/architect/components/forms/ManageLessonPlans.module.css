@@ -1,0 +1,411 @@
+/**
+ * ManageLessonPlans.module.css
+ * Styling for Manage Lesson Plans component
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: #ffffff;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.subtitle {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Messages */
+.messageSuccess,
+.messageError {
+  padding: 0.875rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+}
+
+.messageSuccess {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.messageError {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+  border-left: 4px solid #ef4444;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Section */
+.formSection {
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 0.375rem;
+  border-left: 4px solid #2563eb;
+}
+
+.sectionTitle {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.input,
+.select {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background-color: #ffffff;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.input:hover,
+.select:hover {
+  border-color: #2563eb;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.formActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buttonPrimary,
+.buttonSecondary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.buttonPrimary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.buttonPrimary:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+.buttonPrimary:active {
+  transform: translateY(0);
+}
+
+.buttonPrimary:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.buttonSecondary {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.buttonSecondary:hover {
+  background-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.buttonSecondary:active {
+  transform: translateY(0);
+}
+
+.buttonSecondary:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Grid Section */
+.gridSection {
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 0.375rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin: 0 0 1rem 0;
+}
+
+.emptyText {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Grid Styling */
+.gridWrapper {
+  overflow-x: auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.gridHeader {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1.2fr 1.5fr 1fr 1.3fr 0.9fr;
+  gap: 0;
+  background: #f3f4f6;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.gridRow {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1.2fr 1.5fr 1fr 1.3fr 0.9fr;
+  gap: 0;
+  border-bottom: 1px solid #e5e7eb;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.gridRow:last-child {
+  border-bottom: none;
+}
+
+.gridRow:hover {
+  background: #f9fafb;
+}
+
+.gridCell {
+  padding: 0.875rem 1rem;
+  font-size: 0.9rem;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+}
+
+.lessonId {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.cellContent {
+  color: #374151;
+}
+
+.productBadge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dateText {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.deleteButton {
+  padding: 0.375rem 0.75rem;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  background-color: #fecaca;
+  transform: scale(1.05);
+}
+
+.deleteButton:focus {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .gridHeader,
+  .gridRow {
+    grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr 1.2fr 0.8fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gridHeader,
+  .gridRow {
+    grid-template-columns: 1fr 1.5fr 1fr 1.5fr 1fr 1fr 0.7fr;
+    font-size: 0.8rem;
+  }
+
+  .gridCell {
+    padding: 0.625rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .deleteButton {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .formSection {
+    padding: 1rem;
+  }
+
+  .gridSection {
+    padding: 1rem;
+  }
+
+  .gridWrapper {
+    overflow-x: auto;
+  }
+
+  .gridHeader,
+  .gridRow {
+    grid-template-columns: 0.9fr 1.2fr 0.8fr 1.2fr 0.8fr 1fr 0.6fr;
+    font-size: 0.75rem;
+  }
+
+  .gridCell {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .lessonId {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.25rem;
+  }
+
+  .cellContent {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .productBadge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .deleteButton {
+    padding: 0.2rem 0.35rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .messageSuccess,
+  .messageError,
+  .input,
+  .select,
+  .buttonPrimary,
+  .buttonSecondary,
+  .gridRow,
+  .deleteButton {
+    transition: none;
+  }
+}
